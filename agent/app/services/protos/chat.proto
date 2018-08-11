@@ -1,0 +1,20 @@
+syntax = "proto3";
+package protos;
+
+message UserMessage{
+    string Name =1;
+    string Content =2;
+}
+
+message NewUser{
+    string Content = 1;
+}
+
+message AllMembers{
+    repeated int64  Members = 1;
+}
+
+message JoinResponse{
+    int64 Code = 1;
+    string Result = 2;
+}

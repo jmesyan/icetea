@@ -113,7 +113,7 @@ func (mgr *RoomManager) Message(s *session.Session, msg *protos.UserMessage) err
 func main() {
 	// override default serializer
 	nano.SetSerializer(protobuf.NewSerializer())
-	nano.SetHeartbeatInterval(time.Duration(5) * time.Second)
+	// nano.SetHeartbeatInterval(time.Duration(5) * time.Second)
 
 	// rewrite component and handler name
 	room := NewRoomManager()
@@ -135,5 +135,5 @@ func main() {
 	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir("web"))))
 
 	nano.SetCheckOriginFunc(func(_ *http.Request) bool { return true })
-	nano.Listen(":7873", nano.WithPipeline(pipeline))
+	nano.Connect(":7873", nano.WithPipeline(pipeline))
 }

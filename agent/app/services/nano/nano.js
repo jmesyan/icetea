@@ -8,6 +8,11 @@
   var Package = Protocol.Package;
   var Message = Protocol.Message;
 
+  const statusStart = 1;
+  const statusHandshake = 2;
+  const statusWorking=3;
+  const statusClosed=4;
+
   function Emitter(obj) {
     if (obj) return mixin(obj);
   }
@@ -173,6 +178,8 @@
   var RES_FAIL = 500;
   var RES_OLD_CLIENT = 501;
 
+  var AGENT_STATUS = 0;
+
   if (typeof Object.create !== 'function') {
     Object.create = function (o) {
       function F() {}
@@ -194,12 +201,14 @@
   var abbrs = {};   // code to route string
 
   var heartbeatInterval = 0;
-  var heartbeatTimeout = 0;
-  var nextHeartbeatTimeout = 0;
+  var heartbeatLastAt = 0;
+  // var heartbeatTimeout = 0;
+  // var nextHeartbeatTimeout = 0;
   var gapThreshold = 100;   // heartbeat gap threashold
   var heartbeatId = null;
-  var heartbeatTimeoutId = null;
+  // var heartbeatTimeoutId = null;
   var handshakeCallback = null;
+  var heartbeatData = null;
 
   var decode = null;
   var encode = null;
@@ -213,15 +222,15 @@
 
   var useCrypto;
 
-  var handshakeBuffer = {
-    'sys': {
-      type: JS_WS_CLIENT_TYPE,
-      version: JS_WS_CLIENT_VERSION,
-      rsa: {}
-    },
-    'user': {
-    }
-  };
+  // var handshakeBuffer = {
+  //   'sys': {
+  //     type: JS_WS_CLIENT_TYPE,
+  //     version: JS_WS_CLIENT_VERSION,
+  //     rsa: {}
+  //   },
+  //   'user': {
+  //   }
+  // };
 
   var initCallback = null;
 
@@ -230,6 +239,11 @@
     var host = params.host;
     var port = params.port;
     var path = params.path;
+    heartbeatInterval = params.heartbeat*1000 || 10000;
+    heartbeatData = {
+      "code":200,
+      "heartbeat":params.heartbeat
+    }
 
     encode = params.encode || defaultEncode;
     decode = params.decode || defaultDecode;
@@ -244,19 +258,19 @@
     }
 
 
-    handshakeBuffer.user = params.user;
-    if(params.encrypt) {
-      useCrypto = true;
-      rsa.generate(1024, "10001");
-      var data = {
-        rsa_n: rsa.n.toString(16),
-        rsa_e: rsa.e
-      };
-      handshakeBuffer.sys.rsa = data;
-    }
+    // handshakeBuffer.user = params.user;
+    // if(params.encrypt) {
+    //   useCrypto = true;
+    //   rsa.generate(1024, "10001");
+    //   var data = {
+    //     rsa_n: rsa.n.toString(16),
+    //     rsa_e: rsa.e
+    //   };
+    //   handshakeBuffer.sys.rsa = data;
+    // }
     handshakeCallback = params.handshakeCallback;
-    connect(params, host, port, cb);
-    // listen(params, port, cb);
+    // connect(params, host, port, cb);
+    listen(params, port, cb);
   };
 
   var defaultDecode = nano.decode = function(data) {
@@ -312,7 +326,7 @@
       }
     };
     var onerror = function(event) {
-      nano.emit('io-error', event);
+      // nano.emit('io-error', event);
       console.error('socket error: ', event);
     };
     var onclose = function(event) {
@@ -342,18 +356,34 @@
 
     var onopen = function(event) {
       if(!!reconnect) {
-        nano.emit('reconnect');
+        nano.emit('client reconnect');
       }
       reset();
-      var obj = Package.encode(Package.TYPE_HANDSHAKE, Protocol.strencode(JSON.stringify(handshakeBuffer)));
-      send(obj);
+
+      heartbeatLastAt = Date.now();
+      var obj = Package.encode(Package.TYPE_HEARTBEAT);
+      if(heartbeatId) clearInterval(heartbeatId);
+
+      heartbeatId = setInterval(function(){
+          var deadline = Date.now() - 2*heartbeatInterval;
+          console.log("heartbeatcheck:", deadline, heartbeatLastAt, heartbeatLastAt < deadline);
+          if (heartbeatLastAt < deadline) {
+            console.log("Session heartbeat timeout, LastTime="+heartbeatLastAt+" Deadline="+deadline);
+            clearInterval(heartbeatId);
+            socket.emit('close');
+            return;
+          }
+          send(obj);
+      }, heartbeatInterval);
+
     };
     var onmessage = function(data) {
       processPackage(Package.decode(data), cb);
       // new package arrived, update the heartbeat timeout
-      if(heartbeatTimeout) {
-        nextHeartbeatTimeout = Date.now() + heartbeatTimeout;
-      }
+      // if(heartbeatTimeout) {
+      //   nextHeartbeatTimeout = Date.now() + heartbeatTimeout;
+      // }
+      heartbeatLastAt = Date.now();
     };
     var onerror = function(event) {
       nano.emit('io-error', event);
@@ -367,6 +397,7 @@
 
     var server = net.createServer((sck)=>{
       console.log("client connected");
+      sck.setNoDelay(true);
       socket = sck;
       onopen(sck);
       sck.on("data", onmessage);
@@ -403,9 +434,9 @@
 
   var reset = function() {
     reconnect = false;
-    reconnectionDelay = 1000 * 5;
-    reconnectAttempts = 0;
-    clearTimeout(reconncetTimer);
+    // reconnectionDelay = 1000 * 5;
+    // reconnectAttempts = 0;
+    // clearTimeout(reconncetTimer);
   };
 
   nano.request = function(route, msg, cb) {
@@ -449,34 +480,36 @@
   };
 
   var send = function(packet) {
-    socket.write(Buffer.from(packet.buffer));
+    if(socket && socket.write) socket.write(Buffer.from(packet.buffer));
+    else console.log("the socket is closed, the data you want to send is:", packet.buffer);
   };
 
   var handler = {};
 
   var heartbeat = function(data) {
-    if(!heartbeatInterval) {
-      // no heartbeat
-      return;
-    }
+    console.log("heartbeat come:", data.toString());
+    // if(!heartbeatInterval) {
+    //   // no heartbeat
+    //   return;
+    // }
 
-    var obj = Package.encode(Package.TYPE_HEARTBEAT);
-    if(heartbeatTimeoutId) {
-      clearTimeout(heartbeatTimeoutId);
-      heartbeatTimeoutId = null;
-    }
+    // var obj = Package.encode(Package.TYPE_HEARTBEAT);
+    // if(heartbeatTimeoutId) {
+    //   clearTimeout(heartbeatTimeoutId);
+    //   heartbeatTimeoutId = null;
+    // }
 
-    if(heartbeatId) {
-      // already in a heartbeat interval
-      return;
-    }
-    heartbeatId = setTimeout(function() {
-      heartbeatId = null;
-      send(obj);
+    // if(heartbeatId) {
+    //   // already in a heartbeat interval
+    //   return;
+    // }
+    // heartbeatId = setTimeout(function() {
+    //   heartbeatId = null;
+    //   send(obj);
 
-      nextHeartbeatTimeout = Date.now() + heartbeatTimeout;
-      heartbeatTimeoutId = setTimeout(heartbeatTimeoutCb, heartbeatTimeout);
-    }, heartbeatInterval);
+    //   nextHeartbeatTimeout = Date.now() + heartbeatTimeout;
+    //   heartbeatTimeoutId = setTimeout(heartbeatTimeoutCb, heartbeatTimeout);
+    // }, heartbeatInterval);
   };
 
   var heartbeatTimeoutCb = function() {
@@ -491,25 +524,37 @@
   };
 
   var handshake = function(data) {
-    data = JSON.parse(Protocol.strdecode(data));
-    if(data.code === RES_OLD_CLIENT) {
-      nano.emit('error', 'client version not fullfill');
-      return;
-    }
+    // data = JSON.parse(Protocol.strdecode(data));
+    // if(data.code === RES_OLD_CLIENT) {
+    //   nano.emit('error', 'client version not fullfill');
+    //   return;
+    // }
 
-    if(data.code !== RES_OK) {
-      nano.emit('error', 'handshake fail');
-      return;
-    }
+    // if(data.code !== RES_OK) {
+    //   nano.emit('error', 'handshake fail');
+    //   return;
+    // }
 
-    handshakeInit(data);
+    // handshakeInit(data);
 
-    var obj = Package.encode(Package.TYPE_HANDSHAKE_ACK);
+    // var obj = Package.encode(Package.TYPE_HANDSHAKE_ACK);
+    // send(obj);
+    // if(initCallback) {
+    //   initCallback(socket);
+    // }
+
+    AGENT_STATUS = statusHandshake;
+    var obj = Package.encode(Package.TYPE_HANDSHAKE, Protocol.strencode(JSON.stringify(heartbeatData)));
     send(obj);
-    if(initCallback) {
-      initCallback(socket);
-    }
+
   };
+
+  var handshakeack = function(data){
+     AGENT_STATUS = statusWorking;
+     if(initCallback) {
+        initCallback(socket);
+     }
+  }
 
   var onData = function(data) {
     var msg = data;
@@ -525,19 +570,33 @@
   };
 
   handlers[Package.TYPE_HANDSHAKE] = handshake;
+  handlers[Package.TYPE_HANDSHAKE_ACK] = handshakeack;
   handlers[Package.TYPE_HEARTBEAT] = heartbeat;
   handlers[Package.TYPE_DATA] = onData;
   handlers[Package.TYPE_KICK] = onKick;
 
   var processPackage = function(msgs) {
-    if (msgs && msgs.type == 4) console.log("processPackage:", msgs.body.toString());
+    if (msgs && msgs.type < 4) console.log("processPackage:", msgs.body.toString());
     if(Array.isArray(msgs)) {
       for(var i=0; i<msgs.length; i++) {
         var msg = msgs[i];
-        handlers[msg.type](msg.body);
+        if (AGENT_STATUS < statusWorking && msg.type == 4){
+          console.log("receive data on socket which not yet ACK, will disconnect client");
+          socket.emit('close');
+          return
+        } else {
+           handlers[msg.type](msg.body);
+        }
+       
       }
     } else {
-      handlers[msgs.type](msgs.body);
+       if (AGENT_STATUS < statusWorking && msgs.type == 4){
+        console.log("receive data on socket which not yet ACK, will disconnect client");
+        socket.emit('close');
+        return
+      } else {
+          handlers[msgs.type](msgs.body);
+      }
     }
   };
 

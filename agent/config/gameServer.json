@@ -2,14 +2,12 @@
     "development": {
         "host": "127.0.0.1",
         "port": "7873",
-        "key": "scsc!@#",
-        "maxconnections": 100
+        "heartbeat":5
     },
 
     "production": {
         "host": "127.0.0.1",
         "port": "7873",
-        "key": "scsc!@#",
-        "maxconnections": 100
+        "heartbeat":5
     }
 }

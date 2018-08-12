@@ -24,6 +24,7 @@ gs.start = function() {
     nano.init({
         host: config.host,
         port: config.port,
+        heartbeat:config.heartbeat,
         path: '/nano',
         user: {},
         handshakeCallback : function(){}

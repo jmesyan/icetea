@@ -364,9 +364,9 @@
       var obj = Package.encode(Package.TYPE_HEARTBEAT);
       if(heartbeatId) clearInterval(heartbeatId);
 
-      heartbeatId = setInterval(function(){
+      heartbeatId = setInterval(()=>{
           var deadline = Date.now() - 2*heartbeatInterval;
-          console.log("heartbeatcheck:", deadline, heartbeatLastAt, heartbeatLastAt < deadline);
+          console.log("heartbeatcheck:", Date.now(), heartbeatInterval, heartbeatLastAt, deadline, heartbeatLastAt < deadline);
           if (heartbeatLastAt < deadline) {
             console.log("Session heartbeat timeout, LastTime="+heartbeatLastAt+" Deadline="+deadline);
             clearInterval(heartbeatId);
@@ -487,6 +487,7 @@
   var handler = {};
 
   var heartbeat = function(data) {
+    heartbeatLastAt = Date.now();
     console.log("heartbeat come:", data.toString());
     // if(!heartbeatInterval) {
     //   // no heartbeat
@@ -524,6 +525,8 @@
   };
 
   var handshake = function(data) {
+    heartbeatLastAt = Date.now();
+    console.log("handshake come:", data.toString(), heartbeatLastAt);
     // data = JSON.parse(Protocol.strdecode(data));
     // if(data.code === RES_OLD_CLIENT) {
     //   nano.emit('error', 'client version not fullfill');

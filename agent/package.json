@@ -3,7 +3,11 @@
     "version": "0.0.1",
     "private": false,
     "dependencies": {
+        "@grpc/grpc-js": "^0.2.0",
+        "@grpc/proto-loader": "^0.3.0",
+        "google-protobuf": "^3.0.0",
+        "grpc": "^1.0.0",
         "pomelo": "^2.2.5",
-        "protocol-buffers": "^4.0.4"
+        "protobufjs": "^6.8.8"
     }
 }

@@ -1,7 +1,15 @@
 var log = require('pomelo-logger').getLogger("game", "GameServerManager");
 var pomelo = require('pomelo');
-require("./protos/decode.js");
-var nano = require("./nano/nano.js");
+var PROTO_PATH = __dirname + "/protos/grpc.proto";
+var grpc = require('grpc');
+var protoLoader = require('@grpc/proto-loader');
+const grpcLib = require('@grpc/grpc-js');
+const pkgDefine = protoLoader.loadSync(PROTO_PATH);
+const protos = grpcLib.loadPackageDefinition(pkgDefine).protos;
+
+Buffer.prototype.toByteArray = function () {
+   return Array.prototype.slice.call(this, 0)
+}
 
 var GameServerManager = function() {
     this.$id = "GameServerManager";
@@ -20,41 +28,26 @@ gs.start = function() {
     var config = pomelo.app.get("gameServerConfig");
     this.host = config.host;
     this.port = config.port;
-    this.key = config.key;
-    nano.init({
-        host: config.host,
-        port: config.port,
-        heartbeat:config.heartbeat,
-        path: '/nano',
-        user: {},
-        handshakeCallback : function(){}
-    }, function() {
-        console.log('success');
-        nano.on("onMembers", onMembers);
-        nano.request("room.join", {}, join);
+    this.url = this.host+":"+this.port
+    var server = new grpc.Server();
+    server.addService(protos.GrpcService.service, {
+        MService:rpcService
     });
+    server.bind(this.url, grpc.ServerCredentials.createInsecure());
+    server.start();
+    console.log("server start");
 };
 
-var join = function (data) {
-     console.log("the join reponse is:", data);
-     if (data.Code == 0){
-         nano.on("onNewUser", onNewUser);
-         nano.on('onMessage', onMessage);
-         nano.notify('room.message', {Name: "jmesyan", Content: "i want to talk"});
-     }
+function rpcService(call){
+    call.on('data', function(message){
+        console.log(message);
+        var data = (new Buffer("welcome")).toByteArray();
+        var res = {cid:101, cmd:201, n:301, t:401, data:data}
+        call.write(res);
+    });
 
-};
-
-var onNewUser = function (data) {
-    console.log("add new user:",data);
-};
-
-var onMembers = function (data) {
-    console.log("onMembers data is:", data);
-};
-
-var onMessage = function (msg) {
-    console.log("the msg is:", msg);
-};
-
+    call.on('end', function(){
+        call.end();
+    });
+}
 module.exports = GameServerManager;

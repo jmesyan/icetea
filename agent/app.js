@@ -21,6 +21,24 @@ app.configure('production|development', 'connector', function(){
     });
 });
 
+app.configure('production|development', 'connector|master|game|db', function() {
+  //memcache配置
+  app.loadConfig('memcached', app.getBase() + '/config/memcached.json');
+  //cache
+  app.set('cache', hot.get("Cache", require(app.getBase() + '/app/common/Cache')));
+  //lock
+  // app.set('lock', require(app.getBase() + '/app/net/MemLock'));
+  //tools
+  app.set('tools', require(app.getBase() + '/app/gameutils/Tools'));
+
+  //多语言
+  app.set("locale", hot.get("LocaleManager", require(app.getBase() + '/app/services/LocaleManager')));
+  //handler 热更新开关
+  app.set('serverConfig', { reloadHandlers: true });
+  //remote 热更新开关
+  app.set('remoteConfig', { reloadRemotes: true });
+});
+
 // app configure
 app.configure('production|development', 'game', function() {
     //扫描热更新

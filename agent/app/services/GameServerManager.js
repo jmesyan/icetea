@@ -1,19 +1,19 @@
 var log = require('pomelo-logger').getLogger("game", "GameServerManager");
 var pomelo = require('pomelo');
+var tools = require('../gameutils/Tools');
 var PROTO_PATH = __dirname + "/protos/grpc.proto";
 var grpc = require('grpc');
 var protoLoader = require('@grpc/proto-loader');
 const grpcLib = require('@grpc/grpc-js');
 const pkgDefine = protoLoader.loadSync(PROTO_PATH);
 const protos = grpcLib.loadPackageDefinition(pkgDefine).protos;
+var hot = require("./HotHelper");
+var serversort = require("./StoreDatas").serversort;
+var GameServer = hot.getGameServer();
 
 var fs = require('fs');
 var protobuf = require('protocol-buffers');
 var messages = protobuf(fs.readFileSync(__dirname+'/protos/chat.proto'));
-
-Buffer.prototype.toByteArray = function () {
-   return Array.prototype.slice.call(this, 0)
-}
 
 var GameServerManager = function() {
     this.$id = "GameServerManager";
@@ -42,18 +42,81 @@ gs.start = function() {
     console.log("server start");
 };
 
+
+//回调发生器
+gs.getTick = function(callback) {
+    if (!!callback) {
+        this.ticker++;
+        if (this.ticker > 65535) {
+            this.ticker = 0;
+            //清理一半
+            for (var i = 0; i < 32768; ++i) {
+                delete this.callbacks[i];
+            }
+        } else if (this.ticker == 32768) {
+            //清理一半
+            for (var i = 32768; i < 65536; ++i) {
+                delete this.callbacks[i];
+            }
+        }
+
+        this.callbacks[this.ticker] = callback;
+        return this.ticker;
+    }
+    return false;
+};
+
+//执行回调
+gs.execTick = function(tick, data) {
+    if (tools.isNumber(tick)) {
+        if (!!this.callbacks[tick]) {
+            this.callbacks[tick](data);
+            delete this.callbacks[tick];
+            return true;
+        }
+    }
+    return false;
+};
+
+//获取服务器
+gs.getServerByGID = function(gid) {
+    if (!!serversort[gid])
+        return serversort[gid];
+    return null;
+};
+
 function rpcService(call){
-    console.log("call come", call.metadata._internal_repr.gid);
+    var gids = call.metadata._internal_repr.gid;
+    if (!gids || !tools.isArray(gids))  {
+        console.log("can't find the gid metadata");
+        return call.end();
+    }
+    var gid = parseInt(gids[0]);
+    if (gid  <= 1000) {
+        console.log("the gid info is error, now is:", gid);
+        return call.end();
+    }
+
+    var gserver = serversort[gid];
+    if (!gserver) {
+        console.log("init gid server:", gid);
+        gserver  = new GameServer(gid);
+    }
+
     call.on('data', function(message){
-        console.log(11111);
-        console.log(message, messages.JoinResponse.decode(message.data));
-        var data = messages.UserMessage.encode({Name:"jmesyan", Content:"good"});
-        var res = {cid:101, cmd:201, n:301, t:401, data:data}
-        call.write(res);
+        gserver.onReceivePackData(call, message);
     });
 
     call.on('end', function(){
         call.end();
     });
 }
-module.exports = GameServerManager;
+
+module.exports = {
+    name: "hall",
+    beans: [{
+        id: "GameServerManager",
+        func: GameServerManager,
+        scope: "singleton"
+    }]
+};

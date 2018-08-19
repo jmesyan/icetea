@@ -1,0 +1,1776 @@
+//protoc -I=D:\work\Servers\qcloud\qcloud\Scripts --cpp_out=D:\work\Servers\qcloud\qcloud\FG_MiniGameFramework D:\work\Servers\qcloud\qcloud\Scripts\qcloud.proto
+//protoc -I=..\..\ --cpp_out=..\..\..\FG_MiniGameFramework ..\..\qcloud.proto
+syntax = "proto2";
+package protos;
+message table_info //
+{
+	optional int32 rtype = 1 [default = 0];  //rtype
+	optional int32 ridx  = 2 [default = 0];	//ridx
+	optional int32 tid   = 3 [default = 0];	//桌子ID
+	optional int32 roomstate =4 [default = 0];	//当前该桌子的状态
+	optional int32 BankerPos = 5 [default = 0];	//当前桌子上庄的位置
+	optional int32 CurrdOutCardPos = 6 [default = 0];//当前出牌玩家的位置
+	optional int32 curcount = 7 [default =0];//当前局数
+	optional int32 sumcount = 8 [default =0];//总局数
+	optional int32 ncode = 9 [default =0];//房号
+	optional int32 roomtype = 10 [default =1];//当前麻将类型 1襄阳玩法 2襄阳全频道 3宜城跑恰摸八
+	optional int32 remaincard =11 [default =0];//剩余的牌输
+	optional int32 oncreatetimes =12 [default =0];// ; //创建开始时间 3小时解散桌子
+	optional int32 ownerid =13[default =0];//
+	optional int32 cardnum =14 [default =0];//
+	optional int32 currendpos =15 [default =0];// 使用的麻将数量
+	message user_attr
+	{
+		optional int32 uid = 1 [default = 0]; //用户ID
+		optional int32 pos = 2 [default = 0];	//用户位置
+		optional int32 vip = 3 [default = 0];	//用户VIP等级
+		optional string sex = 4 [default = ""];//用户性别
+		optional int32 sign = 5 [default = 0];//用户从哪个平台登录 PC or phone
+		optional string nickname =6 [default = ""];//用户名字
+		message card_attr
+		{
+			optional int32 type =1 [default = 0];//牌的类型 牌的类型 0碰 1明杠 2 暗杠 3持有 4已出 5扣牌
+			optional int32 card =2 [default = 0];//牌值
+			optional int32 isPeng =3 [default = 0];//（如果是已经出的牌，0表示没有，1表示被碰或者杠了
+		}
+		repeated card_attr card =7;//牌信息,其他玩家显示碰或杠的 自己才传持有
+		optional int32 level =8 [default = 0];//用户的等级
+		optional int32 golds =9 [default = 0];//用户金币
+		optional int32  readystate=10 [default = 0];//是否准备
+		optional int32 isTing =11 [default = 0];//是否已经听牌 0没有 1 有
+		optional string ip =12 [default = ""];//玩家的IP地址
+		optional int32 piao = 13 [default =0];//漂
+		optional string username =14 [default = ""];//用户名字
+		optional int32 permitoptions =15 [default = 0];//
+		optional int32 ganggols =16 [default = 0];//
+	}
+	repeated user_attr user =16;//用户信息
+	optional int32 handlepos =17 [default = 0];//当前操作玩家的位置  //后面是操作通知的信息
+	optional int32 reconnect =18 [default = 0];//是否断线重连
+	repeated int32 allcards = 19 ;//剩余牌、
+	optional int32 opturn =20 [default = -1];//操作用户
+	optional int32 outCard =21 [default = 0];//最后出的麻将
+	optional int32 newcard =22 [default = 0];//新麻将 摸的
+
+	repeated int32 permithu =23 ;//是否存在胡牌
+	repeated int32 hustate =24 ;//胡牌人是否點擊了胡牌
+	repeated int32 gangstate =25 ;//杠牌人是否點擊了杠
+	repeated int32 permitgang =26 ;//是否存在杠牌
+	repeated int32 permitpeng =27 ;//是否存在碰牌
+	repeated int32 pengstate =28;//碰牌人是否點擊了碰
+	repeated int32 qianggangpos =29 ;//
+	optional int32 dianpao =30 [default = 0];//
+	optional int32 firstting =31 [default = 0];//
+	optional int32 lastoutcardpos =32 [default = -1];//
+	optional int32 nstate =33 [default = 0];//游戏状态
+	optional int32 permitcount =34 [default = 0];//多操作
+
+}
+message register_server //ACK|OGID_CONTROL_REGIS 9472
+{
+	required int32 gid	= 1;
+	optional int32 rtype	= 2 [default = 0];
+	optional int32 ridx	= 3 [default = 0];
+	optional string md5	= 4 [default = ""];
+}
+message control_table_users
+{
+	required int32 tid	= 1;
+	message table_user
+	{
+		optional int32 pos	= 1;
+		optional int32 uid	= 2;
+		optional int64 golds	= 3;
+		optional int32 score = 4;
+	}
+	repeated table_user tusers = 2;
+}
+message control_room_users	//ACK|OGID_CONTROL_RUSERS 9476
+{
+	optional int32 gid	= 1 [default = 0];
+	optional int32 rtype	= 2 [default = 0];
+	optional int32 ridx	= 3 [default = 0];
+	message table_info
+	{
+		optional int32 tid	= 1 [default = 0];				//桌子id
+		optional int32 code	= 2 [default = 0];				//房号
+		optional int32 ownerid	= 3 [default = 0];		//房主
+		optional int32 cards	= 4 [default = 0];			//开房消耗房卡数量
+		repeated int32 uid	= 5;
+		optional int32 maxusers = 6 [default = 0];		//最大人数
+		optional string jusers = 7 [default = ""];		//比赛服需要
+	}
+	repeated table_info tableinfo = 4;
+}
+message control_heart_beat	//ACK|OGID_CONTROL_HEART_BEAT 9485
+{
+	required fixed32 nowstamp = 1;
+}
+message control_client_heart_beat //ACK|OGID_CONTROL_CLIENT_HEART_BEAT 9510
+{
+	optional int32 uid = 1 [default = 0];	//uid
+	optional int32 cid = 2 [default = 0];	//channelid
+}
+message control_user_golds	//ACK|OGID_CONTROL_USER_GOLDS 9477
+{
+	required int32 uid	= 1;
+	optional sint32 state	= 2;
+	optional int64 golds	= 3;
+	optional int32 gid	= 4 [default = 0];
+	optional int32 rtype	= 5 [default = 0];
+	optional int32 ridx	= 6 [default = 0];
+	optional sint64 delt	= 7 [default = 0];		//操作变化分数
+}
+message control_kick_user	//REQ|OGID_CONTROL_KICK_USER 9478
+{
+	required int32 rel = 1;   //状态
+	optional int32 tid	= 2;
+	repeated int32 uid	= 3 [packed=true];
+}
+message control_user_enterroom		//ACK |OGID_ROOMSVR_ENTERROOM 12801
+{
+	enum ENTER_REL
+	{
+		ENTER_OK = 0;
+		ENTER_WRONG_INGAME = 1; //游戏中
+		ENTER_WRONG_RELOAD = 2;	//需要重新load
+		ENTER_WRONG_CHANNEL= 3; //请求的频道不对
+		ENTER_WRONG_GOLDS  = 4;	//玩家金币不符合要求
+		ENTER_WRONG_ACCOUNT= 5;	//帐号异常，禁止登陆
+		ENTER_WRONG_OTHERLOGIN = 6;//帐号在别处上线
+		ENTER_WRONG_ROOMFULL = 7;//房间已满
+		ENTER_WRONG_OTHERGAME = 8;//在另外的游戏中
+		ENTER_WRONG_NULLPOP = 9;//连续15把不下注，或者携带筹码小于最底倍连续5把不下注；踢回大厅
+		ENTER_WRONG_GOLDS_LITTLE = 10;//玩家金币不符合要求，太少
+		ENTER_WRONG_GOLDS_MUCH = 11;//玩家金币不符合要求，太多
+		ENTER_WRONG_TABLE_VIP = 12;//桌子VIP
+		ENTER_WRONG_CHGT      =13;//换桌
+		ENTER_WRONG_LEVEL	= 14;		//等级不符
+		ENTER_WRONG_OVER = 15;		//游戏结束，全部退出
+		ENTER_WRONG_GOLDS_LOW_PROTECT = 16;	//游戏结束，触发低保
+		ENTER_WRONG_READY_TIME_OUT = 17;	//游戏结束后超时未准备
+	}
+	required ENTER_REL rel = 1;   //状态			//状态
+	optional int64 golds	= 2;
+	optional int32 step	= 3;
+	optional int32 cid	= 4 [default = 0];
+	optional int32 gid	= 5 [default = 0];
+	optional int32 rtype	= 6 [default = 0];
+	optional int32 ridx	= 7 [default = 0];
+	optional int64 bank	= 8 [default = 0];
+	optional int32 tid  = 9 [default = 0];//桌子id
+	optional int32 uid = 10 [default = 0];//uid
+	optional int32 code = 11 [default = 0];//房间号
+}
+message control_gate		//REQ|OGID_CONTROL_GATE 9475
+{
+	required int32 n	= 1;	//流水号
+	optional int32 rel = 2;   //状态   //状态
+}
+message control_bonus_golds	//ACK|OGID_CONTROL_BONUS_GOLDS 9483
+{
+	required int32 uid	= 1;
+}
+message control_use_prop	//REQ|GLID_GAMEITEM_USE_PROP 12381
+{
+	enum PSEND_REL
+	{
+		PROPS_SEND_OK = 0;					//赠送成功
+		PROPS_CLASS_ERROR = 1;			//道具类型错误
+		PROPS_GOLDS_ERROR = 2;			//金币错误
+		PROPS_PLAYER_ERROR = 3;			//玩家错误
+		PROPS_PRICE_TYPE_ERROR = 4;	//金币购买的其他情况-------暂时不支持
+		PROPS_ALL_PLAYER_ERROE = 5;	//群发玩家错误
+		PROPS_UN_VIP = 6;						//只有vip1以上才能发
+	}
+	required PSEND_REL rel = 1;   //状态
+	optional int32 fuid	= 2;
+	optional int32 pid	= 3;		//道具ID
+	optional int64 cost	= 4;		//道具消费
+	optional int64 bonus	= 5;	//筹码奖励
+	optional int32 pclass	= 6;	//道具类型,0,普通道具;1,表情包;2,工资卡;3,喇叭
+	optional int32 timelen	= 7;	//有效时间（单位可以使天，年，秒，等）
+	repeated int32 uids     = 8 [packed=true];
+}
+message control_game_msg	//ACK|OGID_GAME_MSG 12315
+{
+	required int32 type	= 1;	//0,join;2,leave;3,up level;6,slots bonus
+	optional int32 tid	= 2 [default = 0];
+	optional int32 uid	= 3 [default = 0];
+	optional string nn	= 4 [default = ""];			//昵称
+	optional int32 vip	= 5 [default = 0];
+	optional sint32 pos	= 6 [default = 0];
+	optional int32 level	= 7 [default = 0];		//经验
+	optional int64 golds	= 8 [default = 0];
+	optional int64 bonus	= 9 [default = 0];
+	optional int32 vipday	= 10 [default = 0];
+	optional int64 pond	= 11 [default = 0];
+	optional int64 seat	= 12 [default = -1];		//椅子号
+	optional string sex = 13 [default = ""];//用户性别
+	optional int32  readystate =14 [default = 0];//是否准备
+	optional string ip =15 [default = ""];//ip
+	optional int32 guajian = 16 [default = 0];	//挂件
+	optional int32 score = 17 [default = 0];//积分，开房
+	optional string userinfo = 18 [default = ""];//JSON玩家动作
+}
+message control_player_smile	//ACK|GLID_GAMEITEM_PLAYER_SMILIE 12379
+{
+	required int32 pos = 1;
+	optional sint32 seat = 2 [default = -1];		//椅子号
+	optional string nn = 3 [default = ''];			//昵称
+	optional int32 smiletype = 4 [default = 0];
+	optional int32 smileid = 5 [default = 0];
+	optional int32 state  = 6 [default = 0];
+	optional int32 uid  = 7 [default = 0];
+}
+message control_game_chat	//REQ|GLID_GAMEITEM_CHAT 12411
+{
+	required int32 rel = 1;		//状态   //状态
+	optional int32 uid = 2;
+	optional string nn = 3;		//昵称
+	optional string msg = 4;
+}
+
+message control_user_list	//REQ|OGID_GAME_USERLIST 12313
+{
+	message user_attr
+	{
+		optional int32 uid = 1[default = 0];
+		optional int32 pos = 2 [default = 0];
+		optional int32 level = 3 [default = 0];			//经验
+		optional int32 vip = 4 [default = 0];
+		optional int64 golds = 5 [default = 0];
+		optional string nn = 6;							//昵称
+		optional string sex = 7;						//性别
+		optional int32 seat = 8 [default = -1];			//椅子号
+		optional int32 sign = 9 [default = 0];			//第一位表示是否手机玩家
+		optional int32 lockdealer = 10 [default = 0];	//当前庄家申请下庄(延迟游戏结束后下庄)
+		optional int32 firstbet = 11;					//第一个操作，为1
+		optional int64 chips = 12 [default = 0];		//当前筹码
+		optional int64 lstchips = 13 [default = 0];		//上轮下注筹码总量
+		optional int32 orichips = 14 [default = 0];		//买入
+		optional int32 action = 15[default = 0];		//德州玩家的动作
+		optional int32 laction = 16 [default = 0];		//德州玩家的动作
+		optional string cs = 17 [default = ''];			//德州玩家扑克
+		optional int32 pstate = 18 [default = 0];		//德州状态 1表示正在参与游戏
+		optional int32 serieswins = 19 [default = 0];		//百家乐连赢次数
+
+
+	}
+	repeated user_attr users = 1;
+}
+message control_msg	//ACK|OGID_CONTROL_MSG 9481
+{
+	required int32 cmd = 1;
+	optional int32 uid = 2;
+	optional int32 sid = 3;
+}
+message control_game_offline	//ACK|GLID_GAME_OFFLINE 12323
+{
+	required int32 uid = 1;
+	optional int32 unbanker = 2;				//当前庄家申请下庄(延迟游戏结束后下庄)
+	repeated int64 gatebet = 3 [packed=true];
+	optional int32 rel = 4;						//状态
+	optional int64 golds = 5;
+}
+////////////////////////////////////////game msg/////////////////////////////////////////////////////////////
+message control_gameitem_place	//REQ|GLID_GAMEITEM_PLACE 12373
+{
+	required int32 rel = 1;						//状态   //状态
+	optional sint32 seat = 2 [default = -1];	//椅子号
+	optional int32 uid = 3 [default = 0];
+	optional int32 gid = 4 [default = 0];
+	optional int32 rtype = 5 [default = 0];
+	optional int32 ridx = 6 [default = 0];
+	optional int32 tid = 7 [default = 0];
+	optional int64 golds = 8 [default = 0];
+	optional int64 nmin = 9[default = 0];		//德州最小买入
+	optional int64 nmax = 10[default = 0];		//德州最大买入
+	optional int64 chips = 11[default = 0];		//当前筹码
+	optional string sex = 12[default = ''];		//性别
+	optional string nn = 13[default = ''];		//昵称
+	optional int32 gstate = 14[default = 0];	//當前遊戲狀態
+}
+message control_gameitem_standup	//REQ|GLID_GAMEITEM_STANDUP 12375
+{
+	required int32 rel = 1;							//状态
+	optional sint32 seat = 2[default = -1];			//椅子号
+	optional int32 uid = 3[default = 0];
+	optional int32 tid = 4[default = 0];
+	optional int32 gid = 5 [default = 0];
+	optional int32 rtype = 6 [default = 0];
+	optional int32 ridx = 7 [default = 0];
+	optional int64 golds = 8 [default = 0];
+}
+message control_gameitem_gamestate	//ACK|OGID_GAME_STATE 12314
+{
+	optional int32 roomstate = 1 [default = 0];			//游戏状态
+	optional int32 totaltime = 2 [default = 0];			//游戏时间
+	optional int32 costtime = 3 [default = 0];
+	optional int32 currentbanker = 4 [default = 0];		//当前庄家POS
+	optional int64 bankerscore = 5 [default = 0];		//庄家分数
+	optional int32 bankercount = 6 [default = 0];		//庄家局数
+	optional sint64 bankerincome = 7 [default = 0];		//庄家收益
+	optional int32 gatewin = 8 [default = 0];			//区域（门）结果
+	message carddataitme
+	{
+		optional int32 cardcount = 1;
+		repeated int32 carddata = 2 [packed=true];		//花色 牌  奇偶区分
+	}
+	repeated carddataitme ncarddataitme = 9;
+	repeated int64 record = 10 [packed=true];
+	message userwinscore								//用户输赢
+	{
+		optional int32 uid = 1;
+		optional int64 winscore = 2;
+		optional int64 score = 3;
+		repeated int64  areawinscore = 4 [packed=true];
+	}
+	repeated userwinscore nuserwinscore = 11;
+	repeated int64 areawin = 12 [packed=true];
+	message bankerarray									//庄家列表
+	{
+		optional int32 uid = 1;
+		optional int64 golds = 2;
+	}
+	repeated bankerarray nbankerarray = 13;
+	optional int32 betcondition = 15 [default = 0];		//连续10次没下注踢出房间
+	optional int32 allin = 16 [default = 0];			//全压
+	required int32 tid = 17 [default = 0];
+	optional int32 gstate = 18 [default = 0];			//當前遊戲狀態
+	optional string cs = 19 [default = ''];				//手牌
+	optional int32 riffle = 20 [default = 0];			//洗牌
+	optional string   jinfo = 21 [default = ""];//JSON
+
+}
+message control_table_control	//ACK|OGID_CONTROL_TABLE_CONTROL 9484
+{
+	required int32 tid = 1;
+	optional int32 gstate = 2;					//當前遊戲狀態
+	message cardstype
+	{
+		message cardtype
+		{
+			optional string card = 1;
+		}
+		repeated cardtype cards = 1;
+	}
+	repeated cardstype cards = 3;
+}
+message control_game_end	//ACK|OGID_CONTROL_GAME_END 9488
+{
+	optional int32 rel = 1 [default = 0];  // 1 每局 2 总结算
+	message userend
+	{
+		optional int32 uid = 1 [default = 0];						//参与游戏的玩家id
+		optional int32 changescores = 2 [default = 0];	//参与游戏的玩家积分
+		optional int64 golds = 4 [default = 0];					//金币
+	}
+	repeated userend nuserend = 2;
+	optional int32 gangrounds = 3 [default = 0];//总局数
+	optional int32 zhuozhu = 4 [default =0];		//桌主UID
+	optional int32 fangkashu =5 [default =0];		//开房需要的房卡数量
+	optional int32 iskouka = 6 [default =0];		//0,不扣;1,扣卡
+	optional int32 opentype = 7 [default = 0];	//开房类型:0房主消费 1AA消费 2大赢家消费 3代开消费 4分时段免费
+}
+message control_game_chips	//REQ|GLID_TEXAS_CHIPS 12417
+{
+	required int32 rel = 1;							//状态
+	optional int64 nmin = 2[default = 0];			//德州最小买入
+	optional int64 chips = 3[default = 0];			//当前筹码
+	optional int64 golds = 4[default = 0];
+	optional sint32 seat = 5[default = -1];			//椅子号
+	optional int32 gstate = 6[default = 0];			//當前遊戲狀態
+	optional int32 tid = 7[default = 0];
+	optional int32 uid = 8[default = 0];
+
+}
+message control_gameitem_playcs	//ACK|GLID_TEXAS_PLAYCS 12419
+{
+	message usercs
+	{
+		optional sint32 seat = 1;		//椅子号
+		repeated int32 cs = 2 [packed=true];		//牌
+	}
+	repeated usercs nusercs = 1;
+}
+message control_gameitem_sidepot	//ACK|GLID_GAMEITEM_SIDE_POT 12420
+{
+	repeated int64 pot = 1 [packed=true];
+	message potdata
+	{
+		required sint32 seat = 1;									//椅子号
+		required int64 pid = 2;										//池子编号
+		optional int64 show = 3 [default = 0];		//金币
+		repeated int32 cs = 4	[packed=true];		//牌
+	}
+	repeated potdata npotdata = 2;
+}
+message control_gameitem_arrange	//ACK|GLID_GAMEITEM_ARRANGE 12418
+{
+	required int32 status = 1 ;
+	optional int32 tid = 2 [default = 0];
+	optional int32 boss = 3 [default = -1];			//dealer
+	optional int32 sbseat = 4 [default = -1];		//小盲椅子号
+	optional int32 bbseat = 5 [default = -1];		//大盲椅子号
+	optional int32 tip = 6 [default = 0];				//台费
+	optional int32 ante = 7 [default = 0];			//前注
+	optional int64 nsb = 8 [default = 0];				//小盲注
+	optional int64 nbb = 9 [default = 0];				//大盲注
+	message everyone
+	{
+		optional int32 seat = 1 [default = 0];		//座位号
+		optional int32 status = 2 [default = 0]; 	//是否玩家状态
+		optional int64 chips = 3 [default = 0]; 	//身上携带
+		optional int64 bet   = 4 [default = 0];		//玩家下注
+		optional int32 allin = 5 [default = 0];		//玩家是否allin
+	}
+	repeated everyone neveryone = 10;
+	optional int64 allante = 11 [default = 0];	//所有ante
+}
+message control_gameitem_showcard	//ACK|GLID_GAMEITEM_SHOW_CARD 12431
+{
+	required int32 type = 1;					//类型 show牌 还是 not show
+	optional int32 state = 2;					//状态
+	optional int32 action = 3;					// 德州玩家的动作
+	optional sint32 seat = 4 [default = -1];			//椅子号
+	optional string cs = 5 [default = ''];
+
+}
+message control_gameitem_showdown	//ACK|GLID_GAMEITEM_BETINFO 12378
+{
+	required int32 tid = 1;
+	optional int32 showdown = 2 [default = 0];
+	message cs
+	{
+		optional sint32 seat = 1 [default = -1];		//椅子号
+		repeated int32 hcs = 2 [packed=true];			//手牌
+		repeated int32 mcs = 3 [packed=true];			//最大牌型扑克
+		optional int32 mt = 4 [default = 0];			//最大牌型
+		message pot						//底池
+		{
+			optional int64 pid = 1;
+			optional sint32 seat = 2 [default = -1];	//椅子号
+			optional int64 win = 3;
+		}
+		repeated pot npot = 5;
+	}
+	repeated cs ncs = 3;
+	optional int64 tax =4 [default = 0];				//税收
+	optional int32 winer =5 [default = 0];				//赢家
+	optional sint32 win =6 [default = 0];				//输赢分数
+	optional int32 winerpid =7 [default = 0];			//POT id
+	message gamepot							//底池
+	{
+		optional int32 pid = 1;					//id
+		message userpot
+		{
+			optional sint32 seat = 1[default = -1];		//椅子号
+			optional sint64 win = 2 [default = 0];
+			optional int64 tax = 3 [default = 0];
+			optional sint64 twin = 4 [default = 0];
+		}
+		repeated userpot nuserpot = 2;
+	}
+	repeated gamepot ngamepot = 8;
+}
+message control_gameitem_summary	//可重复买入游戏的小结算: ACK|GLID_GAMEITEM_SUMMARY 12425
+{
+	message user_end
+	{
+		optional int32  uid		= 1 [default = 0];		//uid
+		optional string nn		= 2 [default = ""];		//用户昵称
+		optional int32  sumbuyin	= 3 [default = 0];		//总买入
+		optional int32  sumscore	= 4 [default = 0];		//总积分
+		optional int32  chips		= 5 [default = 0];		//现有筹码
+	}
+	repeated user_end users = 1;
+}
+message control_oncreate_table				//REQ|OGID_CONTROL_ONCREATE_TABLE  9500 创建桌子
+{
+	optional int32 rel = 1;		//
+	optional int32 rtype = 2[default = 0];
+	optional int32 ridx = 3[default = 0];
+	optional int32 tid = 4[default = 0];
+	optional int32 uid = 5[default = 0];
+	optional int32 code = 6[default = 0];		//房间号
+	optional int32 cards = 7[default = 0];		//房卡数量
+	optional int32 opentype = 8 [default = 0];//开桌类型:0,normal;1,AA
+	optional int32 round = 9 [default = 0];		//开桌局数
+	optional int32 gid = 10 [default = 0];		//游戏id
+}
+message control_oncreate_table_user			//ACK|OGID_CONTROL_TABLE_USER  9502 桌子人数
+{
+	optional int32 code = 1[default = 0];		//房间号
+	optional int32 count = 2[default = 0];		//坐下人数
+}
+message control_cancel_table				//ACK|OGID_CONTROL_CANCEL_TABLE  9501 解散桌子
+{
+	optional int32 rel = 1[default = 0];		// 0 用户协商解散 1 被动解散 要退卡  2 时间或者局数 到解散
+	optional int32 rtype = 2[default = 0];
+	optional int32 ridx = 3[default = 0];
+	optional int32 tid = 4[default = 0];
+	optional int32 code = 5[default = 0];
+	optional int32 uid =6[default =0];
+	optional int32 cards =7[default =0];
+	optional int32 isfajiang =8[default =0];				//0代表不发奖 1代表发8奖 2代表发16的奖
+	repeated int32 uids =9;							//所有用户
+	optional int32 opentype = 10 [default =0];				// 开房模式 0 房主 1 AA
+	repeated int32 winuids =11[packed=true];			//大赢家用户
+	optional int32 matchrounds = 12 [default =0];				//局数
+	message matchusers
+	{
+		optional int32 uid =1[default =0];
+		optional sint32 scores =2[default =0];
+	}
+	repeated matchusers musers = 13;				//比赛用户信息
+}
+message control_game_mjstart		//REQ|GLID_MAHJONG_PLACE 12805 开始游戏
+{
+	optional int32 banker = 1 [default = 0];		//当庄的位置
+	message userend
+	{
+		optional int32 uid = 1 [default = 0];			//用户ID
+		optional int32 score = 2 [default = 0];		//用户积分
+		optional int32 pos = 3 [default = 0];       //玩家位置
+		optional int64 golds = 4 [default = 0];		//用户金币
+	}
+	repeated userend nuserend = 2;						//用户信息
+	optional int32 nDice1 = 3 [default = 0];							//第一个骰子
+	optional int32 nDice2 = 4 [default = 0];							//第二个骰子
+	optional int32 curround=5 [default =0];//当前第几局
+	optional int32 magiccard= 6 [default =-1];//财神
+}
+message control_game_pokerstart		//REQ | GLID_OPERATION_PLACE 12805 开始游戏
+{
+	optional int32 banker = 1 [default = 0];			//当庄的位置
+	message userend
+	{
+		optional int32 uid	= 1 [default = 0];			//用户ID
+		optional int32 score	= 2 [default = 0];		//用户积分
+		optional int32 pos	= 3 [default = 0];      //玩家位置
+	}
+	repeated userend nuserend = 2;								//用户信息
+	optional int32 curround = 3 [default = 0];		//当前第几局
+	optional int32 ishuang = 4 [default = 0];			//是否荒局:0,no;1,yes
+	optional int32 signcard = 5 [default = 0];		//标记牌
+}
+message control_game_mjopration   //ACK|GLID_MAHJONG_OPRATION  12806 发送玩家的操作
+{
+	optional int32 uid = 1 [default = 0]; 	//用户ID
+	optional int32 mjid = 2 [default = 0];	//摸到的牌，或者是别人打的牌
+	optional int32 opration = 3 [default = 0];	//可以操作的类型 吃(2) 碰（4），胡（32），听（16），自摸（64），杠（8）假设这个操作有碰和杠 那么这个值是:12(0000 1100)按位与就好了
+	optional int32 waittime = 4 [default = 0];	//等待时间
+	message opercard
+	{
+		optional int32 card = 1 [default = 0];		//碰，胡，听 的牌
+		optional int32 type = 2 [default = 0];//0 胡 1听 2碰 3杠 4吃
+		message hucard
+		{
+			optional int32 card = 1 [default = 0]; //停牌后胡的牌
+		}
+		repeated hucard nhucard=3;//听牌后胡的牌
+		message koucard
+		{
+			optional int32 card = 1 [default = 0]; //听牌后可以扣的牌
+		}
+		message gangcard
+		{
+			optional int32 card = 1 [default = 0]; //可以杠的牌
+			optional int32 type = 2 [default = 0]; //杠的类型，0碰杠 1暗杠 ，2明杠
+		}
+		message chicards
+		{
+			repeated int32 cards = 1; //这个是个数组，假设吃三万 opercard:card = 三万  opercard:chicards = 一万，二万 或者等于 四万 五万
+		}
+		repeated koucard nkoucard =4;//可以扣的牌
+		optional int32 gangtype = 5 [default = -1]; //杠的类型，0碰杠 1暗杠 2明杠
+		repeated gangcard ngangcard =6;//可以杠的牌
+		repeated chicards nchicard =7;//可以吃的牌
+	}
+	repeated opercard nopercard=5;
+
+}
+message control_game_mjcard      //ACK|GLID_MAHJONG_MJCARD  //12808 发送玩家牌信息
+{
+	optional int32 uid = 1[default = 0];//用户ID
+	message usercard
+	{
+		optional int32 card = 1[default = 0];
+	}
+	repeated usercard nusercard = 2;//用户手上的牌
+}
+message control_game_mjmagic      //ACK|GLID_MAHJONG_OPERATION_BAIDA  //12830 百搭
+{
+	optional int32 fancard = 1[default = 0];//翻牌
+	optional int32 magiccard = 2[default = 0];//百搭
+}
+message control_game_mjcards	//重播的时候用的
+{
+	message userinfo
+	{
+		optional int32 uid = 1[default = 0];//用户ID
+		message usercard
+		{
+			optional int32 card = 1[default = 0];
+		}
+		repeated usercard nusercard = 2;//用户手上的牌
+	}
+	repeated userinfo nuserinfo=1;
+}
+message control_game_operation_peng //ACK|GLID_MAHJONG_OPERATION_PENG 12809 碰
+{
+	optional int32 uid = 1 [default = 0];//用户ID
+	optional int32 card = 2 [default = 0];//碰的牌
+	optional int32 pos = 3 [default = 0];//碰牌人的位置
+	optional int32 waitime = 4 [default = 0];//碰完牌等待出牌时间
+	optional int32 rel = 5 [default =1];//碰牌操作返回 0失败 1成功
+	optional int32 addhuacount = 6 [default =1];//add  hua  count
+	optional int32 provideuser = 7		[default =-1];	//供應者
+	repeated int32 enjoinoutcards=8	;			//禁止出的牌
+}
+message control_game_operation_gang //ACK|GLID_MAHJONG_OPERATION_GANG 12810 杠
+{
+	optional int32 uid = 1 [default = 0];//用户ID
+	optional int32 card = 2 [default = 0];//杠的牌
+	optional int32 pos = 3 [default = 0];//杠牌人的位置
+	optional int32 type = 4 [default = 0];//杠牌的类型    0碰杠 1暗杠 2明杠
+	message MoneryOp
+	{
+		optional int32 nuid = 1 [default = 0];//用户ID
+		optional int32 monery =2 [default = 0];//加减钱数值
+	}
+	repeated MoneryOp nMoneryOp =5;//杠产生的金币操作
+	optional int32 rel = 6 [default = 1]; //杠牌操作返回 0失败 1成功
+	optional int32 addhuacount = 7 [default =1];//add  hua  count
+	optional int32 provideuser = 8 [default =-1];	//供應者
+	optional int32 waittime = 9 [default = 0];//碰完牌等待出牌时间
+}
+message control_game_operation_pop //ACK|GLID_MAHJONG_OPERATION_POP  12811 出牌
+{
+	optional int32 uid = 1 [default = 0];//用户ID
+	optional int32 card = 2 [default = 0];//牌ID
+	optional int32 pos = 3 [default = 0];//出牌人的位置
+	optional int32 rel = 4 [default = 1];//出牌操作返回 0失败 1成功
+	optional string info = 5 [default = ""];//JSON
+}
+message control_game_operation_ting //ACK|GLID_MAHJONG_MJCARD_TING 12812 听牌
+{
+	optional int32 uid = 1 [default = 0]; //用户ID
+	message holdcard
+	{
+		optional int32 card = 1 [default = 0];//持有的牌，明牌的话会把牌数据发给客户端
+		optional int32 type = 2 [default = 0];//0表示持有的 1表示扣的
+
+	}
+	repeated holdcard nholdcard = 2;//持有的牌
+	optional int32 rel = 3 [default = 1];//停牌操作返回 0失败 1成功
+	repeated int32 nnhucards = 4; //胡的牌
+}
+
+message control_game_operation_cancelting //ACK|GLID_MAHJONG_MJCARD_CANCELTING 12832 取消听牌
+{
+	optional int32 uid = 1 [default = 0]; //用户ID
+	optional int32 pos = 2 [default = 0];//出牌人的位置
+}
+
+message control_game_operation_qianggang  //ACK|GLID_MAHJONG_MJCARD_QIANGGANG 12813 抢杠
+{
+	optional int32 uid = 1 [default = 0];//抢杠人ID
+	optional int32 guid = 2 [default = 0];//杠牌人ID
+	optional int32 card =3 [default = 0];//杠的牌
+	optional int32 waittime = 4 [default = 0];//碰完牌等待出牌时间
+}
+message control_game_operation_hu       //ACK|GLID_MAHJONG_OPERATION_HU 12815 胡牌类型
+{
+	message userinfo
+	{
+		optional int32 uid = 1 [default = 0];//用户id
+		optional string nickname = 2 [default = ""];//用户名字
+		optional int32 ratio =3 [default = 0];//用户翻数
+		optional int32 gangfen =4 [default = 0];//杠的分数
+		optional int32 zongfen =5 [default = 0];//总分
+		optional int32 type = 6 [default = 0];//类型 0为与自己无关 1输家 2赢家
+		message card  //牌
+		{
+			optional int32 card = 1 [default = 0];//牌
+			optional int32 type =2[default =0];//0是不扣的牌 1是扣的牌
+			repeated int32 chicards = 3;//如果是吃的牌，吃的牌组成的牌组 1 2
+		}
+		repeated card nagangcard = 7;//暗杠的牌
+		repeated card nmgangcard = 8;//明杠的牌
+		repeated card npengcard = 9;//碰的牌
+		repeated card nholdcard = 10;//手上持有牌
+		optional int32 nhucardtype= 11 [default = 0];//胡牌的类型
+		optional int32	golds =12 [default = 0];//用户手上拥有的钱
+		optional int32	PaoQiaMo=13 [default = 0];//跑恰摸八的翻数
+		optional int32  MaiMa = 14 [default = 0];//随州玩法中的买马分
+		repeated card nchicard = 15; //吃的牌
+		optional int32  huacount = 16 [default = 0];//花
+		optional int32  buhua = 17 [default = 0];//花
+		optional int32  holdhua = 18 [default = 0];//花
+		optional int32  dihua = 19 [default = 0];//花
+		optional int32  chengbao = 20 [default = 0];//跟胡的人承包关系 0和1
+		optional int32  huorder = 21 [default = 0];//第几个胡
+		optional int32  zimoorpaopos =22 [default = 0];//自摸或者点炮玩家位置
+		optional int32	score =23 [default = 0];//用户手上拥有的积分
+		optional string userinfo = 24 [default = ""];//玩家动作
+	}
+	optional int32 roomid =1 [default = 0];//房间号
+	optional int32 innings =2 [default = 0];//当前局数
+	repeated userinfo userinfos=3;//玩家信息
+	optional int32 curtype =4 [default = 0];//当局是自摸还是点炮 0自摸 1点炮 2流局 3解散结算
+	optional int32 zimoorpaopos =5 [default = 0];//自摸或者点炮玩家位置
+	optional int32 rel =6 [default = 1];//胡牌操作返回 0失败 1成功
+	message ZhuaMaCard  //牌
+	{
+		optional int32 card = 1 [default = 0];//牌
+		optional int32 value = 2 [default = 0];//
+	}
+	repeated ZhuaMaCard nZhuaMaCard = 7 ;//存放抓马的牌
+	optional int32 MJType = 8 [default = 0];//当前打的麻将的类型
+}
+
+message control_game_operation_tableinfo  //ACK|GLID_MAHJONG_OPERATION_TABLEINFO          12816 发送桌子信息
+{
+	optional int32 rtype = 1 [default = 0];  //rtype
+	optional int32 ridx  = 2 [default = 0];	//ridx
+	optional int32 tid   = 3 [default = 0];	//桌子ID
+	optional int32 roomstate =4 [default = 0];	//当前该桌子的状态
+	optional int32 BankerPos = 5 [default = 0];	//当前桌子上庄的位置
+	optional int32 CurrdOutCardPos = 6 [default = 0];//当前出牌玩家的位置
+	optional int32 curcount = 7 [default =0];//当前局数
+	optional int32 sumcount = 8 [default =0];//总局数
+	optional int32 ncode = 9 [default =0];//房号
+	optional int32 roomtype = 10 [default =1];//当前麻将类型 1襄阳玩法 2襄阳全频道 3宜城跑恰摸八
+	optional int32 remaincard =11 [default =0];//剩余的牌输
+	optional int32 magiccard = 12 [default =0];//百搭牌
+	optional int32 fancard = 13 [default = 0];//翻牌
+	optional int32 maima = 14 [default = 0];//飞
+	optional int32 maxtimes = 15 [default = 0];//倍数
+	optional int32 baidadh = 16 [default = 0];//白搭大胡玩法
+	optional int32 gameid = 17 [default = 0];//
+	optional int32 qianggang = 18 [default = 0];// 红中麻将 是否可以抢杠胡
+	optional int32 lastoutcardpos = 19 [default = -1];// 最后出牌人的位置
+	optional string rules = 20 [default = ""];     //JSON
+	optional int32 bdianpao = 21 [default = 0];//白搭是否可以点炮
+	optional int32 qmnotchi = 22 [default = 0];//敲麻 不可吃选项
+	optional int32 paobaida = 23 [default = 0];//金山跑百搭点炮不可胡 1不可胡
+	optional int32 lefttime = 24 [default = 0];//剩余时间
+	optional int32 qonemtwoc = 25 [default = 0];//敲麻 一模两冲
+	optional int32 bjianpaihua = 26 [default = 0];//百搭，增加20花选项（中发白也算花）
+	optional int32 opentype = 27 [default =0];		// 开房模式 0 房主 1 AA
+}
+message control_game_operation_userinfo //ACK|GLID_MAHJONG_OPERATION_USERINFO	12817 发送玩家信息
+{
+	message user_attr
+	{
+		optional int32 uid = 1 [default = 0]; //用户ID
+		optional int32 pos = 2 [default = 0];	//用户位置
+		optional int32 vip = 3 [default = 0];	//用户VIP等级
+		optional string sex = 4 [default = ""];//用户性别
+		optional int32 sign = 5 [default = 0];//用户从哪个平台登录 PC or phone
+		optional string nickname =6 [default = ""];//用户名字
+		message card_attr
+		{
+			optional int32 type =1 [default = 0];//牌的类型 牌的类型 0碰 1明杠 2 暗杠 3持有 4已出 5扣牌  6可以胡的牌 7吃 8表示花牌
+			optional int32 card =2 [default = 0];//牌值
+			optional int32 isPeng =3 [default = 0];//（如果是已经出的牌，0表示没有，1表示被碰或者杠了
+			repeated int32 chicards =4;//（如果是吃的话，这个就是吃的牌组 1 2
+			optional int32 provideuser =5 [default = -1];//供应者
+		}
+		repeated card_attr card =7;//牌信息,其他玩家显示碰或杠的 自己才传持有
+		optional int32 level =8 [default = 0];//用户的等级
+		optional int32 golds =9 [default = 0];//用户金币
+		optional int32  readystate=10 [default = 0];//是否准备
+		optional int32 isTing =11 [default = 0];//是否已经听牌 0没有 1 有
+		optional string ip =12 [default = ""];//玩家的IP地址
+		optional int32 piao = 13 [default =0];//漂
+		optional int32 pengganghua = 14 [default =0];//碰杠花
+		repeated int32 chengbaouser =15;
+		repeated int32 enjoinoutcards =16;		//禁止出的牌
+		optional int32 guajian = 17 [default = 0];	//挂件
+		optional string userinfo = 18 [default = ""];//JSON玩家动作
+		optional int32 piaobaida = 19 [default = 0]; //漂百搭数量
+		optional int32 maijiao = 20   [default = 0]; //买脚分数
+		optional int32 tuoguan = 21   [default = 0]; //比赛托管
+		optional int32 huancardstate = 22   [default = 0]; //是否已换卡  血战
+		optional int32 dingquestate = 23   [default = 0]; //是否已定缺
+		optional int32 dingquesymbol = 24   [default = 0]; //定缺花色
+		optional sint32 score =25 [default = 0];			//用户分数
+	}
+	repeated user_attr user =1;//用户信息
+	optional int32 handlepos =2 [default = 0];//当前操作玩家的位置  //后面是操作通知的信息
+	optional int32 reconnect =3 [default = 0];//是否断线重连
+}
+
+message control_game_operation_ready //ACK|GLID_MAHJONG_OPERATION_READY  12818 准备
+{
+	optional int32 uid =1 [default = 0];//用户ID
+	optional int32 pos =2 [default = 0];//用户位置
+	optional int32 piao = 3 [default =0];//漂
+	optional int32 rel = 4 [default =1];//状态，1成功 0失败 3是已经准备过了
+
+}
+message control_game_settlement //ACK|GLID_MAHJONG_SETTLEMENT 12819 最后的结算
+{
+	message userinfo
+	{
+		optional int32 uid =1 [default = 0];//用户ID
+		optional string nickname = 2 [default =""];//用户名称
+		optional int32 zimocount =3 [default = 0];//自摸次数
+		optional int32 jiepaocount =4 [default = 0];//接炮次数
+		optional int32 dianpaocount =5 [default =0];//点炮次数
+		optional int32 angangcount =6 [default =0];//暗杠次数
+		optional int32 minggangcount = 7 [default =0];//明杠次数
+		optional int32 zongchengji =8 [default = 0];//总成绩
+		optional string userinfo = 9 [default = ""];		//个人游戏信息
+		optional sint32 score = 10 [default = 0];	//总成绩
+	}
+	optional int32 roomtid =1 [default =0];//房间号
+	optional int32 curcount =2 [default =0];//当前局数
+	optional int32 sumcount =3 [default =0];//总局数
+	repeated userinfo userinfos =4;//用户信息
+	optional int32 roomid =5 [default =0];//房间号
+}
+message control_game_mj_msg	//ACK|GLID_MAHJONG_OPERATION_MSG 12819 玩家进入 玩家信息
+{
+	required int32 type	= 1;	//0进入  1离开
+	optional int32 tid	= 2 [default = 0];// 桌子ID
+	optional int32 uid	= 3 [default = 0];//用户ID
+	optional string nickname	= 4 [default = ""];			//昵称
+	optional int32 vip	= 5 [default = 0];//VIP等级
+	optional int32 pos	= 6 [default = 0];//位置
+	optional int32 level	= 7 [default = 0];		//经验
+	optional int32 golds	= 8 [default = 0];//拥有金币
+	optional int32 bonus	= 9 [default = 0];//奖金
+	optional int32 vipday	= 10 [default = 0];//VIP天数
+	optional int32 pond	= 11 [default = 1];//坐下
+	optional int32 seat	= 12 [default = -1];		//椅子号
+	optional string sex = 13 [default = ""];//用户性别
+	optional int32  readystate =14 [default = 0];//是否准备
+	optional string ip =15 [default = ""];//ip
+	optional int32 guajian = 16 [default = 0];	//挂件
+	optional string userinfo = 17 [default = ""];//JSON玩家动作
+
+}
+message control_game_operation_mopai //ACK|GLID_MAHJONG_OPERATION_MOPAI  12821 摸牌
+{
+	optional int32 uid = 1 [default = 0];//用户ID
+	optional int32 card = 2 [default = 0];//牌ID
+	optional int32 pos = 3 [default = 0];//出牌人的位置
+	optional int32 rel = 4 [default = 1];//出牌操作返回 0失败 1成功
+	optional int32 waittime =5 [default =0];//超时时间
+}
+message control_game_operation_jieshan //ACK|GLID_MAHJONG_OPERATION_JIESAN  12822 解散
+{
+	optional int32 uid =1 [default =0];//发起解散ID
+	optional int32 ntype =2 [default =0];//类型, 0是解散信息。 1是牌局开始前桌主解散 2是第一局没有打完解散，房卡退还 3解散成功 4解散失败
+	optional int32 TimeOut=3 [default=0];//超时时间
+	message user
+	{
+		optional int32 uid =1 [default =0];//其他用户的ID
+		optional int32 state=2 [default =0];//0表示等待操作，1表示同意 2表示拒绝
+	}
+	repeated user userinfo =4;//其他用户的状态
+}
+message control_game_operation_kill ////ACK|GLID_MAHJONG_OPERATION_KILLP  12823 踢人
+{
+	optional int32 rel = 1 [default =1];//踢人状态，1表示成功，0表示失败
+	optional int32 uid = 2 [default =-1];//被踢人的id;
+	optional int32 pos = 3 [default =-1];//被踢人的位置
+}
+message control_game_operation_koupai ////ACK|GLID_MAHJONG_OPERATION_KOUPAI  12824 扣牌
+{
+	optional int32 rel = 1 [default =1];//1表示成功 0失败
+	message card
+	{
+		optional int32 card = 1 [default =0];
+	}
+	repeated card koucards = 2;//还可以扣的牌
+	repeated card ting = 3;//现在听的牌
+}
+message control_game_operation_hucard //ACK|GLID_MAHJONG_OPERATION_HUCARD 12825 表示听某张牌，可以胡哪几张
+{
+	optional int32 rel = 1 [default =1];//1表示成功 0失败
+	message ting
+	{
+		optional int32 card = 1 [default =0];
+		message hu
+		{
+			optional int32 card = 1 [default =0];
+		}
+		repeated hu nhu = 2;//还可以扣的牌
+	}
+	repeated ting nting = 2;//听的牌
+}
+message control_game_operation_exitroom //ACK|GLID_MAHJONG_OPERATION_USEREXIT 12826 用户自己退出
+{
+	optional int32 rel = 1 [default =1];//1表示成功 0失败
+	optional string errorinfo = 2 [default = ""];//错误原因
+	optional int32 uid= 3 [default =0];//用户ID
+}
+message control_game_operation_offoronline  //ACK|GLID_MAHJONG_OPERATION_OFFORONLE 12827 用户掉线或者掉线回来
+{
+	optional int32 state = 1 [default = 0];//0表示掉线 1表示重连进来
+	optional int32 uid   = 2 [default = 0];//掉线或重连玩家ID
+}
+message control_game_operation_chi //ACK|GLID_MAHJONG_OPERATION_CHI 12828 吃牌
+{
+	optional int32 rel = 1 			[default =1];	//状态，1成功
+	optional int32 uid = 2 			[default =0];	//用户ID
+	optional int32 pos = 3 			[default =0];	//用户位置
+	optional int32 chicard = 4 		[default =0];	//吃的牌
+	repeated int32 chicards =5;						//用户吃后的牌
+	optional int32 provideuser =6		[default =-1];	//供應者
+	repeated int32 enjoinoutcards=7	;			//禁止出的牌
+	optional int32 waittime = 8 [default = 0];//碰完牌等待出牌时间
+
+}
+message control_game_operation_buhua //ACK|GLID_MAHJONG_OPERATION_BUHUA 12829 补花
+{
+	optional int32 rel = 1 			[default =1];	//状态，1成功
+	optional int32 uid = 2 			[default =0];	//用户ID
+	optional int32 pos = 3 			[default =0];	//用户位置
+	optional int32 count = 4 		[default =0];	//补花数量
+	repeated int32 buhuacards =5;						//补花的牌
+	repeated int32 huanhuicards =6;					//补花换回来的牌
+}
+message control_game_operation_chengbao //ACK|GLID_MAHJONG_OPERATION_CHENGBAO 12831 承包
+{
+	message users
+	{
+		optional int32 pos = 1 			[default =-1];	//用户位置
+		repeated int32 chengbaouser =2;
+	}
+	repeated users nusers = 1;//
+}
+
+message control_game_operation_hustate //ACK|GLID_MAHJONG_OPERATION_HUSTATE 12834 是否已胡
+{
+	optional int32 rel = 1 			[default = 1];	//状态，0成功;>0,失败原因
+	optional int32 uid = 2 			[default = 0];	//用户ID
+	optional int32 pos = 3 			[default = 0];	//用户位置
+	optional int32 type = 4 		[default = 0];	//胡牌类型 0自摸 1点炮 2抢杠
+	optional int32 zimoorpaopos =5  [default = 0];//自摸或者点炮玩家位置
+	optional int32 card = 6 		[default = 0];  //胡的牌
+}
+
+message control_game_operation_huancard //ACK|GLID_MAHJONG_OPERATION_HUANCARD 12835 换三张
+{
+	optional int32 uid = 1 [default = 0];//用户ID
+	repeated int32 card = 2 ;//换的牌
+	optional int32 pos = 3 [default = 0];//换牌人的位置
+	optional int32 rel = 4 [default = 0];//0 所有人准备完毕 1单人准备成功 2单人准备失败
+}
+
+message control_game_operation_dingque //ACK|GLID_MAHJONG_OPERATION_DINGQUE 12836 定缺
+{
+	optional int32 uid = 1 [default = 0];//用户ID
+	optional int32 symbol = 2 [default = 0];//定缺的花色
+	optional int32 pos = 3 [default = 0];//用户的位置
+	optional int32 rel = 4 [default = 0];//0 所有人准备完毕 1单人准备成功 2单人准备失败
+}
+
+message control_match_oncreate_table				//REQ|OGID_CONTROL_MATCH_ONCREATE_TABLE  9503	比赛创建桌子
+{
+	optional int32 rel = 1;		//
+	optional int32 gid = 2[default = 0];
+	optional int32 rtype = 3[default = 0];
+	optional int32 ridx = 4[default = 0];
+	optional int32 tid = 5[default = 0];
+	optional int32 matchid = 6[default = 0];		//比赛id
+	optional int32 matchnum = 7[default = 0];		//比赛 第几轮
+}
+message control_match_cancel_table				//ACK|OGID_CONTROL_CONTROL_CANCEL_TABLE  9504 解散桌子
+{
+	optional int32 rel = 1[default = 0];		//
+	optional int32 gid = 2[default = 0];
+	optional int32 rtype = 3[default = 0];
+	optional int32 ridx = 4[default = 0];
+	optional int32 tid = 5[default = 0];
+	optional int32 matchid = 6[default = 0];
+	optional int32 matchnum =7[default =0];
+	repeated int32 uids =8;//所有用户
+	optional int32 dbild = 9[default = 0];			//入库LID
+}
+////////////////////////////////////////poker game msg/////////////////////////////////////////////////////////////
+
+message control_poker_game_start		//REQ | GLID_POKER_PLACE 12805 开始游戏
+{
+	optional int32 banker = 1 [default = 0];		//当庄的位置
+	message userend
+	{
+		optional int32 uid	= 1 [default = 0];	//用户ID
+		optional int32 score	= 2 [default = 0];	//用户积分
+		optional int32 pos	= 3 [default = 0];      //玩家位置
+	}
+	repeated userend nuserend = 2;				//用户信息
+	optional int32 curround = 3 [default = 0];		//当前第几局
+}
+message control_poker_game_end	//ACK|OGID_CONTROL_GAME_END 9488
+{
+	optional int32 rel = 1 [default = 0];  // 1 每局 2 总结算
+	message userend
+	{
+		optional int32 uid = 1 [default = 0];
+		optional sint64 changescores = 2 [default = 0];
+	}
+	repeated userend nuserend = 2;
+	optional int32 gangrounds = 3 [default = 0];//总局数
+	optional int32 zhuozhu = 4 [default =0];		//桌主UID
+	optional int32 fangkashu =5 [default =0];		//开房需要的房卡数量
+	optional int32 iskouka = 6 [default =0];		//0,不扣;1,扣卡
+	optional int32 opentype = 7 [default = 0];	//开房类型:0,normal;1,AA
+}
+message control_game_poker_msg	//ACK|GLID_POKER_OPERATION_MSG 12820 玩家进入 玩家信息
+{
+	required int32 type	= 1;	//0进入  1离开
+	optional int32 tid	= 2 [default = 0];// 桌子ID
+	optional int32 uid	= 3 [default = 0];//用户ID
+	optional string nickname	= 4 [default = ""];			//昵称
+	optional int32 vip	= 5 [default = 0];//VIP等级
+	optional int32 pos	= 6 [default = 0];//位置
+	optional int32 level	= 7 [default = 0];		//经验
+	optional int32 score	= 8 [default = 0];//拥有金币
+	optional int32 bonus	= 9 [default = 0];//奖金
+	optional int32 vipday	= 10 [default = 0];//VIP天数
+	optional int32 pond	= 11 [default = 1];//坐下
+	optional int32 seat	= 12 [default = -1];		//椅子号
+	optional string sex = 13 [default = ""];//用户性别
+	optional int32  readystate =14 [default = 0];//是否准备
+	optional string ip =15 [default = ""];//ip
+	optional int32 guajian = 16 [default = 0];	//挂件
+	optional string rules = 17 [default = ""];//JSON玩家动作
+}
+message control_poker_gameitem_turn	//ACK|OGID_GAME_TURN 12312 当前玩家
+{
+	optional int32 turn = 1 [default = 0];				//当前玩家座位号
+	optional int32 action = 2 [default = 0];			//当前玩家动作
+	optional int32 maxbet = 3  [default = 0];			//当前玩家最大下注
+	optional int32 allin = 4  [default = 0];			//当前玩家最大下注
+	optional int32 totaltime = 5 [default = 0];		//时间
+	optional int32 costtime = 6  [default = 0];		//已过时间
+	optional int32 sign		= 7  [default = 0];			//标记
+	optional int32 base		= 8  [default = 0];			//当前轮最大下注
+}
+message control_poker_gameitem_call	//REQ|GLID_OPERATION_CALL 12809 ddz 叫分
+{
+	optional int32 rel = 1 [default = 0];					//0,0k;> 0,fail;
+	optional int32 pos = 2 [default = 0];					//叫分的玩家座位号
+	optional int32 uid = 3 [default = 0];					//
+	optional int32 score = 4 [default = 0];				//叫的分：0,表示不叫;3分，直接游戏进入下一个阶段
+	optional int32 istouliao = 5 [default = 0];		//是否头撂:0,no;1,yes
+	optional int32 maxbombs = 6 [default = 0];
+}
+message control_poker_gameitem_backcard	//发送底牌 ACK|OGID_OPERATION_BACKCARD 12814
+{
+	optional int32 uid = 1 [default = 0];					//拿底牌的玩家id
+	repeated int32 backcard = 2 [packed=true];		//底牌
+	optional int32 card_count = 3 [default = 0];					//拿底牌的数量 庄8 闲0
+	repeated int32 bomb_data = 4 [packed = true];					//可以出几次炸弹
+}
+message control_poker_gameitem_grab	//REQ|GLID_OPERATION_GRAB 12810 ddz 抢地主/报到
+{
+	optional int32 rel = 1 [default = 0];					//0,0k;> 0,fail;
+	optional int32 pos = 2 [default = 0];					//操作的玩家座位号
+	optional int32 uid = 3 [default = 0];					//
+	optional int32 action = 4 [default = 0];			//0,不抢/不报到;>0,抢/报到的牌的值(1,2,3,...,13,14,15)
+	optional int32 times = 5 [default = 0];				//当前倍数
+	repeated int32 bdcard = 6 [packed = true];		//报到的牌
+}
+message control_poker_gameitem_add	//REQ|GLID_OPERATION_ADDTIMES 12813 ddz 加倍/摊打
+{
+	optional int32 rel = 1 [default = 0];					//0,0k;> 0,fail;
+	optional int32 pos = 2 [default = 0];					//操作的玩家座位号
+	optional int32 uid = 3 [default = 0];					//
+	optional int32 action = 4 [default = 0];			//0,不加;>0,加
+	optional int32 times = 5 [default = 0];				//当前倍数
+	repeated int32 tdcard = 6 [packed = true];		//摊打玩家的手牌
+}
+message control_poker_gameitem_bet		//REQ|GLID_GAMEITEM_BET 12374
+{
+	required int32 tid = 1;
+	optional int32 result = 2;							//返回
+	optional int32 seat = 3 [default = -1];	//椅子号
+	optional int32 uid = 4 [default = 0];
+	optional int32 gate = 5 [default = 0];	//下注区域（门）
+	optional int32 bet = 6 [default = 0];
+	optional int32 type = 7 [default = 0];
+	repeated int32 card = 8 [packed=true];	//玩家手牌
+	optional int32 rel = 9;									//比牌结果
+	optional int32 coins = 10;							//总下注
+}
+message control_poker_oncreate_table				//REQ|OGID_CONTROL_ONCREATE_TABLE  9500 创建桌子
+{
+	optional int32 rel = 1;		//
+	optional int32 rtype = 2[default = 0];
+	optional int32 ridx = 3[default = 0];
+	optional int32 tid = 4[default = 0];
+	optional int32 uid = 5[default = 0];
+	optional int32 code = 6[default = 0];			//房间号
+	optional int32 cards = 7[default = 0];		//房卡数量
+	optional int32 opentype = 8 [default = 0];//开桌类型:0,normal;1,AA
+}
+
+message control_poker_cancel_table				//ACK|OGID_CONTROL_CANCEL_TABLE  9501 解散桌子
+{
+	optional int32 rel = 1[default = 0];			// 0 用户协商解散 1 被动解散 要退卡  2 时间或者局数 到解散
+	optional int32 rtype = 2[default = 0];		//
+	optional int32 ridx = 3[default = 0];			//
+	optional int32 tid = 4[default = 0];			//桌子id
+	optional int32 code = 5[default = 0];			//房号
+	optional int32 uid =6[default =0];				//桌主
+	optional int32 cards =7[default =0];			//开放需要的房卡数量
+	optional int32 isfajiang = 8 [default =0];//0代表不发奖 1代表发8奖 2代表发16的奖
+	repeated int32 uids = 9 [packed=true];		//所有用户
+	optional int32 opentype = 10 [default = 0];//开房类型:0,normal;1,AA
+}
+message control_poker_gameitem_gamestate	//ACK|OGID_GAME_STATE 12314
+{
+	optional int32 roomstate = 1 [default = 0];			//游戏状态
+	optional int32 totaltime = 2 [default = 0];			//游戏时间
+	optional int32 costtime  = 3 [default = 0];
+	optional int32 currentbanker = 4 [default = 0];		//当前庄家POS
+	optional int32 dipond 	 = 5 [default = 0];		//底池
+	message userinfo
+	{
+		optional int32 pos = 1 [default = 0];		//玩家座位
+		optional int32 uid = 2 [default = 0];		//玩家id
+		optional string nn = 3 [default = ""];	//玩家昵称
+		optional int32 vip = 4 [default = 0];		//玩家vip
+		optional int32 bet = 5 [default = 0];		//玩家底注
+		optional int32 action = 6 [default = 0];//玩家action
+	}
+	repeated userinfo user = 6;
+	repeated int32    dics = 7 [packed = true];//底牌
+}
+
+message control_poker_game_operation_ready //REQ|GLID_OPERATION_READY  12818 准备
+{
+	optional int32 uid = 1 [default = 0];//用户ID
+	optional int32 pos = 2 [default = 0];//用户位置
+	optional int32 rel = 3 [default = 1]; //状态，0失败,1成功, 3是已经准备过了
+}
+message control_poker_game_settlement_three //ACK|GLID_GAMEITEM_SETTLEMENT 12819 最后的结算
+{
+	message userinfo
+	{
+		optional int32 uid =1 [default = 0];						//用户ID
+		optional string nickname = 2 [default =""];			//用户名称
+		optional int32 than = 3 [default = 0];					//主动比牌次数
+		optional int32 thaned = 4 [default = 0];				//被动比牌次数
+		optional int32 thanlose = 5 [default = 0];			//比牌输的次数
+		optional int32 wins = 6 [default = 0];					//本人赢得局数
+		optional int32 score = 7 [default = 0];	//总成绩
+	}
+	optional int32 roomid = 1 [default = 0];//房间号
+	optional int32 curcount = 2 [default = 0];//当前局数
+	optional int32 sumcount = 3 [default = 0];//总局数
+	repeated userinfo userinfos = 4;//用户信息
+}
+message control_poker_game_operation_open //REQ|GLID_OPERATION_OPEN 12831	桌主点击开始游戏
+{
+	optional int32 rel = 1 			[default = 1];	//状态，0成功;>0,失败原因
+	optional int32 uid = 2 			[default = 0];	//用户ID
+	optional int32 pos = 3 			[default = 0];	//用户位置
+}
+message control_poker_game_operation_tableinfo  //ACK|GLID_POKER_OPERATION_TABLEINFO          14339 发送桌子信息
+{
+	optional int32 rtype = 1 [default = 0];  		//rtype
+	optional int32 ridx  = 2 [default = 0];			//ridx
+	optional int32 tid   = 3 [default = 0];			//桌子ID
+	optional int32 roomstate = 4 [default = 0];		//当前该桌子的状态
+	optional int32 BankerPos = 5 [default = 0];		//当前桌子上庄的位置
+	optional int32 CurrdOutCardPos = 6 [default = 0];	//当前出牌玩家的位置
+	optional int32 curcount = 7 [default =0];		//当前局数
+	optional int32 sumcount = 8 [default =0];		//总局数
+	optional int32 ncode = 9 [default =0];			//房号
+	optional int32 roomtype = 10 [default =1];		//王是否可以压2
+	optional int32 remaincard =11 [default =0];		//剩余的牌数
+	optional int32 maxtimes = 12 [default = 0];		//倍数
+	optional int32 lstoutpos = 13 [default = 0];	//最近出牌位置
+	repeated int32 lstoutcs = 14 [packed=true];					//最近出的牌
+	repeated int32 lstzoutcs = 15 [packed=true];					//最近出牌的真实值
+	optional int32 ownerid = 16 [default = 0];		//桌主uid
+	optional int32 kindtype = 17[default = 0];      //王的类型：0,王不可单出;	1,王可压2
+	optional int32 maxscore = 18[default = 0];      //2^2倍封顶，2^3倍封顶，2^4倍封顶
+	optional int32 candoubleout =19 [default =0];  //两张王可以配
+	optional int32 kingbom	=20 [default =0];//软硬炸弹一样大
+	optional int32 canliuju =21 [default =0];//单王流局
+	optional int32 bankerstate = 22 [default=0];//换庄形式  0论庄 1 连庄
+	optional string rules = 23 [default = ""];		//游戏规则：JSON
+	optional int32 luck_pos =24 [default=0];		//幸运位置
+	optional int32 luck_card = 25 [default = 0];		//幸运牌
+	repeated int32 score_list= 26 [packed=true];		//4个人叫分
+	optional int32 lefttime = 27 [default = 0];//剩余时间
+}
+message control_poker_game_operation_userinfo //ACK|GLID_OPERATION_USERINFO	12817 发送玩家信息
+{
+	message user_attr
+	{
+		optional int32 uid = 1 [default = 0];				//用户ID
+		optional int32 pos = 2 [default = 0];				//用户位置
+		optional int32 vip = 3 [default = 0];				//用户VIP等级
+		optional string sex = 4 [default = ""];			//用户性别
+		optional int32 sign = 5 [default = 0];			//用户从哪个平台登录 PC or phone
+		optional string nickname =6 [default = ""];	//用户名字
+		optional int32 level =7 [default = 0];			//用户的等级
+		optional sint32 score =8 [default = 0];			//用户分数
+		optional int32  readystate=9 [default = 0];	//是否准备
+		optional string ip =10 [default = ""];			//玩家的IP地址
+		repeated int32 cards = 11 ;									//玩家手牌
+		message turn_cards
+		{
+			repeated int32 cs = 1 [packed=true];										//牌组
+			repeated int32 csz= 2 ;										//牌的真是值
+		}
+		repeated turn_cards turncs = 12;						//玩家本轮出的每组牌
+		optional int32 maxbombs = 13 [default = 0];	//可出最多炸弹个数:0,表示无限制;>0,表示最大数量
+		optional int32 outbombs = 14 [default = 0];	//已出炸弹个数
+		optional int32 guajian = 15 [default = 0];	//挂件
+		optional int32 tuoguan = 16   [default = 0]; //比赛托管
+		optional string rules = 17 [default = ""];		//游戏规则：JSON
+	}
+	repeated user_attr user =1;//用户信息
+	optional int32 handlepos =2 [default = 0];//当前操作玩家的位置  //后面是操作通知的信息
+	optional int32 reconnect =3 [default = 0];//是否断线重连
+}
+message control_poker_game_operation_pass //REQ|GLID_OPERATION_PASS  12812 pass
+{
+	optional int32 uid = 1 [default = 0];	//用户ID
+	optional int32 pos = 2 [default = 0];	//出牌人的位置
+	optional int32 rel = 3 [default = 1];	//出牌操作返回: 0成功 1失败
+	optional int32 turn = 4[default = 255];//当前玩家
+}
+message control_poker_game_operation_pop //REQ|GLID_POKER_OPERATION_POP  12811 出牌
+{
+	optional int32 uid = 1 [default = 0];	//用户ID
+
+	repeated int32 card = 2 [packed=true];//传进来的真实值
+	repeated int32 bcard = 3 [packed=true];//王代替后的值
+	optional int32 pos = 4 [default = 0];	//出牌人的位置
+	optional int32 rel = 5 [default = 1];	//出牌操作返回 0成功 1失败
+	optional int32 times = 6[default = 1];//目前公共倍数
+	optional int32 turn = 7[default = 255];//当前玩家
+	optional int32 card_type = 8 [default = 0];	//出牌类型
+	optional int32 card_count = 9 [default = 0];	//出牌数量
+}
+message control_poker_game_operation_result       //ACK|GLID_POKER_OPERATION_RESULT 14338 结算
+{
+	message userinfo
+	{
+		optional int32 uid = 1 [default = 0];				//用户id
+		optional string nickname = 2 [default = ""];//用户名字
+		optional int32 times = 3 [default = 0];			//倍数
+		optional int32 bombs = 4 [default = 0];			//炸弹个数
+		optional int32 havechun = 5 [default = 0];	//是否春天
+		optional int32 haveking = 6 [default = 0];	//是否有王死手里
+		optional int32 havebomb = 7 [default = 0];	//是否有炸死手里
+		repeated int32 cards = 8 [packed=true];										//手牌
+		optional sint32	score = 9 [default = 0];		//用户手上拥有的分
+		optional sint32 wins = 10  [default = 0];		//本局输赢的分
+		optional string uinfo = 11 [default = ""];		//玩家游戏信息:JSON
+	}
+	optional int32 roomid  = 1 [default = 0];			//房间号
+	optional int32 innings = 2 [default = 0];			//当前局数
+	repeated userinfo userinfos =  3 ;							//玩家信息
+	optional int32 rel = 4 [default = 1];					//胡牌操作返回 0成功 1失败
+	optional int32 gtimes = 5 [default = 0];			//公共倍数
+	optional int32 gbombs = 6 [default = 0];			//炸弹总数
+	optional int32 haochun = 7 [default = 0];			//庄家一把就出完，算豪春
+	optional int32 curtype = 8 [default = 0];			//当局是:0,正常结算;1,解散结算 2流局
+	optional string vginfo = 9 [default = ""];			//游戏信息:JSON
+	optional int32 bao_win =10 [default = 0];			//标识是不是报道后直接赢
+}
+
+
+message control_poker_game_settlement //ACK|GLID_POKER_SETTLEMENT 12819 最后的结算
+{
+	message userinfo
+	{
+		optional int32 uid =1 [default = 0];						//用户ID
+		optional string nickname = 2 [default =""];			//用户名称
+		optional int32 chun = 3 [default = 0];					//打别人春天人次
+		optional int32 chuned = 4 [default = 0];				//被春天次数
+		optional int32 haochun = 5 [default = 0];				//打出豪春局数
+		optional int32 bombs = 6 [default = 0];				//本人打出的炸弹个数
+		optional int32 wins = 7 [default = 0];					//本人赢得局数
+		optional sint32 zongchengji = 8 [default = 0];	//总成绩
+	}
+	optional int32 roomtid = 1 [default = 0];//房间号
+	optional int32 curcount = 2 [default = 0];//当前局数
+	optional int32 sumcount = 3 [default = 0];//总局数
+	repeated userinfo userinfos = 4;//用户信息
+}
+message control_poker_game_pokercard      //ACK|GLID_POKER_CARDS  //12808 发送玩家牌信息
+{
+	optional int32 uid = 1 [default = 0];//用户ID
+	repeated int32 cs = 2 [packed=true];							//用户手上的牌
+	optional int32 leftcards = 3 [default = 0];				//剩余牌数
+	optional int32 newcard = 4 [default = 0];					//新发的牌,补牌时用
+}
+message control_poker_game_pokercards	//重播的时候用的
+{
+	message userinfo
+	{
+		optional int32 uid = 1[default = 0];//用户ID
+		repeated int32 cs  = 2 [packed=true];							//用户手上的牌
+	}
+	repeated userinfo nuserinfo=1;
+}
+
+message control_poker_game_msg		//ACK|GLID_POKER_MSG 14358
+{
+	optional int32 uid = 1 [default = 0];				//用户ID
+	optional int32 pos = 2 [default = 0];				//用户位置
+	optional int32 vip = 3 [default = 0];				//用户VIP等级
+	optional string sex = 4 [default = ""];			//用户性别
+	optional int32 sign = 5 [default = 0];			//用户从哪个平台登录 PC or phone
+	optional string nickname =6 [default = ""];	//用户名字
+	optional int32 level =7 [default = 0];			//用户的等级
+	optional sint32 score =8 [default = 0];			//用户分数
+	optional int32  readystate=9 [default = 0];	//是否准备
+	optional string ip =10 [default = ""];			//玩家的IP地址
+	repeated int32 cards = 11 ;									//玩家手牌
+	message turn_cards
+	{
+		repeated int32 cs = 1 [packed=true];										//牌组
+		repeated int32 csz= 2 ;										//牌的真是值
+	}
+	repeated turn_cards turncs = 12;						//玩家本轮出的每组牌
+	optional int32 maxbombs = 13 [default = 0];	//可出最多炸弹个数:0,表示无限制;>0,表示最大数量
+	optional int32 outbombs = 14 [default = 0];	//已出炸弹个数
+}
+
+// 以下是牛牛的信息
+message control_game_niuniu_msg	//ACK|GLID_NIUNIU_OPERATION_MSG 12501 玩家进入 或 离开 或玩家信息
+{
+	required int32 type	= 1;	//0进入  1离开
+	optional int32 tid	= 2 [default = 0];// 桌子ID
+	optional int32 uid	= 3 [default = 0];//用户ID
+	optional string nickname	= 4 [default = ""];			//昵称
+	optional int32 vip	= 5 [default = 0];//VIP等级
+	optional int32 pos	= 6 [default = 0];//位置
+	optional int32 level	= 7 [default = 0];		//经验
+	optional int32 golds	= 8 [default = 0];//拥有金币
+	optional int32 bonus	= 9 [default = 0];//奖金
+	optional int32 vipday	= 10 [default = 0];//VIP天数
+	optional int32 pond	= 11 [default = 1];//坐下
+	optional int32 seat	= 12 [default = -1];		//椅子号
+	optional string sex = 13 [default = ""];//用户性别
+	optional int32  readystate =14 [default = 0];//是否准备
+	optional string ip =15 [default = ""];//ip
+
+}
+
+message control_game_niuniu_ready //ACK|GLID_NIUNIU_READ  12502 准备
+{
+	optional int32 uid =1 [default = 0];//用户ID
+	optional int32 pos =2 [default = 0];//用户位置
+	optional int32 ready = 3 [default =1];//状态，1成功 0失败 3是已经准备过了
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+message control_game_state_info //ACK|OGID_GAME_STATE  12314  游戏状态信息
+{
+	optional int32 state =1 [default = 0];//游戏状态
+	optional int32 time =2 [default = 0]; //时间
+}
+
+message control_game_niuniu_rob_boss //ACK|GLID_NIUNIU_ROB_BOSS  12503 抢庄
+{
+	optional int32 uid =1 [default = 0];//用户ID
+	optional int32 pos =2 [default = 0];//用户位置
+	optional int32 rel = 3 [default =0];//状态，0成功 1已操作
+	optional int32 rob_boss = 4 [default = 0]; // 0 未准备 1已准备
+}
+
+message control_game_niuniu_boss_info //ACK|GLID_NIUNIU_BOSS_INFO  12504 定庄
+{
+	optional int32 uid =1 [default = 0];//用户ID
+	optional int32 pos =2 [default = 0];//用户位置
+}
+
+message control_game_niuniu_bet_info //ACK|GLID_NIUNIU_BET_SCORE  12505 压分
+{
+	optional int32 uid =1 [default = 0];//用户ID
+	optional int32 pos =2 [default = 0];//用户位置
+	optional int32 bet =3 [default = 0];//压分
+}
+
+message control_game_niuniu_card_info //ACK|GLID_NIUNIU_DEAL_CARD  12506 发牌
+{
+	message card
+	{
+		optional int32 index = 1 [default = 0]; // 索引
+		optional int32 symbol = 2 [default = 0]; // 花色
+	}
+
+	optional int32 uid =1 [default = 0];			// 用户ID
+	optional int32 pos =2 [default = 0];			// 用户位置
+	optional int32 card_count = 3[default = 0];		// 牌的数目
+	repeated card cards = 4;						// 牌集
+	optional int32 card_type = 5 [default = 0];		// 牌型
+	optional int32 points = 6 [default = 0];		// 牌点
+}
+
+message control_niuniu_round_result  //	ACK|GLID_NIUNIU_ROUND_RESULT 12507 每一局结算结果
+{
+	message user_round_result
+	{
+		optional int32 uid = 1 [default = 0];					// 用户ID
+		optional int32 pos = 2 [default = 0];					// 座位
+		optional int32 win	= 3 [default = 0];					// 输赢
+		optional int32 card_type = 4 [default = 0];				// 牌型
+		optional int32 points = 5 [default = 0];				// 点数
+		optional int32 scores = 6 [default = 0];				// 分数
+	}
+
+	optional int32 boss_pos = 1 [default = 0];					// 庄位
+	optional int32 round = 2 [default = 0];						// 第几局
+	optional int32 max_round = 3 [default = 0];					// 最大局数
+	repeated user_round_result user_list = 4;				 	// 玩家结算列表
+}
+
+message control_game_niuniu_result  // ACK|GLID_NIUNIU_GAME_RESULT 12508 大结算
+{
+	message user_game_result
+	{
+		optional int32 uid = 1[default = 0];					// uid
+		optional int32 pos = 2[default = 0];					// 座位
+		optional int32 score = 3[default = 0];					// 分数
+		optional int32 all_win_count = 4 [default = 0];			// 全赢局数
+		optional int32 all_lose_count = 5 [default = 0];		// 全输局数
+		optional int32 niu_10_count =6 [default = 0];			// 牛10局数
+		optional int32 niu_11_count =7 [default = 0];			// 五花牛局数
+		optional int32 niu_12_count =8 [default = 0];			// 炸弹局数
+		optional int32 niu_13_count =9 [default = 0];			// 五小牛局数
+		optional int32 win_count = 10 [default = 0];			// 赢局数
+	}
+	optional int32 roomtid =1[default = 0];						// 房间号
+	optional int32 cur_round = 2[default = 0];					// 当前局数
+	optional int32 max_round = 3[default = 0];					// 最大局数
+	repeated user_game_result user_list = 4;					// 玩家列表
+}
+
+message control_game_niuniu_show_card //ACK|GLID_NIUNIU_SHOW_CARD  12509 亮牌
+{
+	message card
+	{
+		optional int32 index = 1 [default = 0]; // 索引
+		optional int32 symbol = 2 [default = 0]; // 花色
+	}
+
+	optional int32 uid =1 [default = 0];			// 用户ID
+	optional int32 pos =2 [default = 0];			// 用户位置
+	optional int32 card_type = 3 [default = 0];		// 牌型
+	optional int32 points = 4 [default = 0];		// 点数
+	repeated card cards = 5;						// 牌集
+}
+
+message control_game_niuniu_tableinfo  //ACK|GLID_MAHJONG_OPERATION_TABLEINFO          12816 发送桌子信息
+{
+	optional int32 rtype = 1 [default = 0];  				//rtype
+	optional int32 ridx  = 2 [default = 0];					//ridx
+	optional int32 tid   = 3 [default = 0];					//桌子ID
+	optional int32 roomstate =4 [default = 0];				//当前该桌子的状态
+	optional int32 boss_pos = 5 [default = 0];				//当前桌子上庄的位置
+	optional int32 curcount = 6 [default =0];				//当前局数
+	optional int32 sumcount = 7 [default =0];				//总局数
+	optional int32 ncode = 8 [default =0];					//房号
+	optional int32 gametype = 9 [default =1];				//庄家类型 1 轮庄 2 霸庄 3 K庄
+	optional int32 scoretype = 10 [default = 1];			//积分模式
+	optional int32 player_num = 11 [default = 4];			//最大游戏人数
+	optional int32 aa	= 12[default = 0];					//aa
+	optional int32 ownerexit = 13[default = 0];				//桌主离开
+	optional int32 ownerid = 14[default = 0];				//桌主id
+}
+message control_game_niuniu_userinfo //ACK|GLID_MAHJONG_OPERATION_USERINFO	12817 发送玩家信息
+{
+	message user_attr
+	{
+		message card
+		{
+			optional int32 index = 1 [default = 0]; 		// 索引
+			optional int32 symbol = 2 [default = 0]; 		// 花色
+		}
+		optional int32 uid = 1 [default = 0]; 				//用户ID
+		optional int32 pos = 2 [default = 0];				//用户位置
+		optional int32 vip = 3 [default = 0];				//用户VIP等级
+		optional string sex = 4 [default = ""];				//用户性别
+		optional int32 sign = 5 [default = 0];				//用户从哪个平台登录 PC or phone
+		optional string nickname =6 [default = ""];			//用户名字
+		optional int32 level = 7 [default = 0];				//用户的等级
+		optional int32 score = 8 [default = 0];				//用户分数
+		optional string ip = 9 [default = ""];				//玩家的IP地址
+		optional int32 ready_state = 10 [default = 0];		//是否准备
+		optional int32 rob_boss_state = 11 [default = 0]; 	//是否抢庄
+		optional int32 show_cards_state = 12 [default = 0];	//是否亮牌
+		optional int32 bet_score = 13 [default = 0]; 		//压分
+		optional int32 card_type = 14 [default = 0];		//牌型
+		optional int32 points = 15 [default = 0];			//点数
+		repeated card cards = 16;							//牌信息
+		optional int32 rob_action = 17 [default = 0];		//抢庄是否已操作 0 或 1
+		optional int32 win = 18[default = 0];				//本局输赢
+		optional int32 guajian = 19 [default = 0];	//挂件
+		optional string userinfo = 20 [default = ""];//JSON玩家动作
+	}
+	repeated user_attr user =1;								//用户信息
+	optional int32 handlepos =2 [default = 0];				//当前操作玩家的位置  //后面是操作通知的信息
+	optional int32 reconnect =3 [default = 0];				//是否断线重连
+}
+
+message control_game_niuniu_betinfo //ACK|GLID_NIUNIU_GAME_BET_INFO	12510 发送玩家下注信息
+{
+	message user_bet
+	{
+		optional int32 uid = 1 [default = 0]; 				//用户ID
+		optional int32 pos = 2 [default = 0];				//用户位置
+		optional int32 bet_score = 3 [default = 0]; 		//压分
+	}
+	repeated user_bet user =1;								//用户下注信息
+	optional int32 boss_pos = 2 [default = 0];				//庄家位置
+}
+message control_game_operation_jpq	//记牌器 ACK|OGID_OPERATION_JPQ 12807
+{
+	repeated int32 cardleft = 1 [packed = true];	//1~K,S(小王),B(大王)
+}
+
+message control_game_operation_result       //ACK|GLID_GAMEITEM_RESULT 12377 结算
+{
+	message userinfo
+	{
+		optional int32 uid = 1 [default = 0];				//用户id
+		optional string nickname = 2 [default = ""];//用户名字
+		optional int32 pos = 3 [default = 0];				//座位
+		optional string userinfo = 4 [default = ""];	//具体游戏信息:json
+		repeated int32 cards = 5 [packed = true];										//手牌
+		optional sint32	golds = 6 [default = 0];		//用户手上拥有的分
+		optional sint32 wins = 7  [default = 0];		//本局输赢的分
+	}
+	optional int32 roomid  = 1 [default = 0];			//房间号
+	optional int32 innings = 2 [default = 0];			//当前局数
+	repeated userinfo userinfos = 3;							//玩家信息
+	optional int32 rel = 4 [default = 1];					//胡牌操作返回 0成功 1失败
+	optional string gameinfo = 5 [default = ""];		//游戏总体信息:json
+	optional int32 curtype = 6 [default = 0];			  //当局是:0,正常结算;1,解散结算
+}
+message control_gameitem_turn	//ACK|OGID_GAME_TURN 12312 当前玩家
+{
+	optional int32 turn = 1 [default = 0];				//当前玩家座位号
+	optional int32 action = 2 [default = 0];			//当前玩家动作
+	optional int32 maxbet = 3  [default = 0];			//当前玩家最大下注
+	optional int32 allin = 4  [default = 0];			//当前玩家最大下注
+	optional int32 totaltime = 5 [default = 0];		//时间
+	optional int32 costtime = 6  [default = 0];		//已过时间
+	optional int32 sign		= 7  [default = 0];			//标记
+	optional int32 base		= 8  [default = 0];			//当前轮最大下注
+	optional string jinfo = 9  [default = ""];		//JSON
+}
+
+message control_gameitem_call	//REQ|GLID_OPERATION_CALL 12809 ddz 叫分
+{
+	optional int32 rel = 1 [default = 0];					//0,0k;> 0,fail;
+	optional int32 pos = 2 [default = 0];					//叫分的玩家座位号
+	optional int32 uid = 3 [default = 0];					//
+	optional int32 score = 4 [default = 0];				//叫的分：0,表示不叫;3分，直接游戏进入下一个阶段
+	optional int32 istouliao = 5[default = 0];			//上海斗地主是不是头撂： 0不是 1是
+	optional int32 maxbombs = 6 [default = 0];
+}
+
+message control_gameitem_grab	//REQ|GLID_OPERATION_GRAB 12810 ddz 抢地主
+{
+	optional int32 rel = 1 [default = 0];					//0,0k;> 0,fail;
+	optional int32 pos = 2 [default = 0];					//操作的玩家座位号
+	optional int32 uid = 3 [default = 0];					//
+	optional int32 action = 4 [default = 0];			//0,不抢;>0,抢
+	optional int32 times = 5 [default = 0];				//当前倍数
+	repeated int32 bdcard = 6[packed=true];       //上海斗地主报道的牌
+}
+
+message control_gameitem_add	//REQ|GLID_OPERATION_ADDTIMES 12813 ddz 加倍
+{
+	optional int32 rel = 1 [default = 0];					//0,0k;> 0,fail;
+	optional int32 pos = 2 [default = 0];					//操作的玩家座位号
+	optional int32 uid = 3 [default = 0];					//
+	optional int32 action = 4 [default = 0];			//0,不加;>0,加
+	optional int32 times = 5 [default = 0];				//当前倍数
+	repeated int32 tdcard = 6 [packed=true];			//上海斗地主 摊打牌
+}
+// 上海比赛
+/*message control_match_start_end		 //ACK|OGID_CONTROL_MATCH_START 9506 比赛开始 结束 check
+{
+	optional int32 rel = 1 [default = 0];		// 1，比赛开始,2结束 ,3 check
+	optional int32 mid = 2 [default = 0];		//比赛id
+}*/
+message control_match_tuoguan		 //ACK|GLID_MAHJONG_OPERATION_TUOGUAN  12833 托管了取消托管
+{
+	optional int32 rel = 1 [default = -1]; //状态，0托管,1取消托管
+	optional int32 uid = 2 [default = 0];//用户ID
+	optional int32 pos = 3 [default = 0];//用户位置
+}
+message control_user_tuika	//针对玩家的退卡	ACK|OGID_CONTROL_USER_TUIKA 9504
+{
+	optional int32 uid = 1 [default = 0];	//要退卡的玩家id
+	optional int32 tid = 2 [default = 0];	//桌子id
+	optional int32 opentype = 3 [default = 0];	//开房模式 // 0 房主 1 AA
+	optional int32 code = 4 [default = 0];	//房号
+	optional int32 cardnum = 5 [default = 0];	//卡数量
+}
+//同步手牌，用来查找BUG
+message control_poker_card_tong_bu		 //			REQ|GLID_POKER_CARD_TONG_BU	14359 发送单个玩家手牌，用来同步查找BUG
+{
+	optional int32 uid = 1[default = 0];							//用户ID
+	repeated int32 cs  = 2 [packed=true];							//用户手上的牌
+}
+/////////////////////////////////match start//////////////////////////////
+message control_match_start_end		 //ACK|OGID_CONTROL_MATCH_START 9506 比赛开始 结束 check
+{
+	optional int32 rel = 1 [default = 0];		// 1，比赛开始,2结束 ,3 check
+	optional int32 mid = 2 [default = 0];		//比赛id
+}
+message control_match_user_un_or_sign		//比赛报名：REQ|OGID_CONTROL_MATCH_USER_SIGN 9502
+{
+	optional int32 type = 1 [default = 0];	//0,报名;1,取消报名;2,强制退赛
+	optional int32 rel = 2 [default = 0];	//0,ok;1:mid有问题/不能强退;2:玩家已在比赛中/没有玩家比赛信息;3:玩家对象生成失败/玩家不属于报名状态，不能取消报名;4:比赛状态不对;5:报名人数已满;6:
+	optional int32 uid = 3 [default = 0];	//uid
+	optional int32 mid = 4 [default = 0];	//mid
+	optional int32 mlid = 5 [default = 0];	//mlid
+	optional int32 lid = 6 [default = 0];	//流水号
+	optional string srule = 7 [default = ""];//其他信息
+}
+message control_match_distribute_users	//玩家分桌：ACK|OGID_CONTROL_MATCH_DISTRIBUTE_USER 9503
+{
+	optional int32 mid = 1 [default = 0];	//比赛id
+	optional int32 stage = 2 [default = 0];	//第一场，需要>0
+	optional int32 round = 3 [default = 0];	//需要打几局
+	message match_server_table
+	{
+		optional int32 gid = 1 [default = 0];	//gid
+		optional int32 rtype = 2 [default = 0];	//rtype
+		optional int32 ridx = 3 [default = 0];	//ridx
+		optional int32 tid = 4 [default = 0];	//tid
+		repeated int32 users = 5 [packed = true];//玩家id数组
+	}
+	repeated match_server_table tableusers = 4;
+}
+message control_match_result	//比赛结果: ACK|OGID_CONTROL_MATCH_RANK 9494
+{
+	optional int32 mid = 1 [default = 0];
+	optional int32 stage = 2 [default = 0];	//第一场，需要>0
+	optional int32 bend = 3 [default = 0];	//是否决赛
+	message match_result_user
+	{
+		optional int32 uid = 1 [default = 0];	//uid
+		optional int32 mlid = 2 [default = 0];	//mlid
+		optional sint32 score = 3 [default = 0];	//score
+		optional int32 rank = 4 [default = 0];	//名次
+		optional int32 bleave = 5 [default = 0];//是否强退
+		optional int32 bup = 6 [default = 0];	//是否晋级
+		optional int32 signtime = 7 [default = 0];//报名时间
+	}
+	repeated match_result_user users = 4;		//比赛玩家
+	optional string szinfo = 5 [default = ""];	//其他信息:Json:{"lid":mtt时，已经进行了几次淘汰;"num":本次参加淘汰赛的人数}
+}
+message control_match_tables	//比赛服的所有桌子信息: REQ|OGID_CONTROL_TABLE_RECORD 9482
+{
+	message match_table_info
+	{
+		optional int32 gid = 1		[default = 0];	//gid
+		optional int32 rtype = 2	[default = 0];	//rtype
+		optional int32 ridx = 3		[default = 0];	//ridx
+		optional int32 tid = 4		[default = 0];	//tid
+		optional int32 mid = 5		[default = 0];	//比赛id
+		optional int32 stage = 6	[default = 0];	//比赛阶段
+	}
+	repeated match_table_info tables = 1;			//比赛桌子信息
+}
+// 上海比赛
+message control_match_leave			 //ACK|OGID_CONTROL_MATCH_LEAVE 9508 比赛开始后退赛
+{
+	optional int32 rel = 1 [default = 0];		// 1，比赛开始退赛
+	optional int32 uid = 2 [default = 0];		//
+	optional int32 mid = 3 [default = 0];		//比赛id
+	optional int32 mlid = 4 [default = 0];		//比赛Lid
+}
+message control_match_Lastendround			 //ACK|OGID_CONTROL_MATCH_LAST_ENDROUND  9509 比赛阶段结算
+{
+	optional int32 rel = 1 [default = 0];		//
+	message users
+	{
+		optional int32 uid = 1 [default = 0];		//
+		optional sint32 score = 2 [default = 0];		//
+		optional int32 mid = 3 [default = 0];		//比赛id
+		optional int32 mlid = 4 [default = 0];		//比赛Lid
+		optional int32 stage = 5 [default = 0];		//比赛阶段
+	}
+	repeated users nusers = 2;
+	optional int32 tid = 3 [default = 0];
+}
+message control_match_android_sign	//ACK | OGID_CONTROL_MOTOR_SIGN 9486
+{
+	optional int32 uid = 1 [default = 0];	//uid
+	optional int32 mid = 2 [default = 0];	//mtid
+	optional int32 mlid = 3 [default = 0];	//mlid
+}
+message control_match_user_rise	//REQ | OGID_CONTROL_MATCH_USER_RISE 9490 天梯赛复活
+{
+	optional int32 rel = 1 [default = 0];	//0,ok;1:mid有问题;2:比赛状态不对;3:玩家在比赛中，不能复活;4:玩家对象生成失败
+	optional int32 uid = 2 [default = 0];	//uid
+	optional int32 mid = 3 [default = 0];	//mid
+	optional int32 stage = 4 [default = 0];	//天梯等级
+	optional int32 lid = 5 [default = 0];	//流水号
+	optional string srule = 6 [default = ""];//其他信息
+}
+message control_match_commoninfo //ACK|OGID_CONTROL_MATCH_COMMON_INFO 9495 比赛通用消息
+{
+	optional int32 type = 1 [default = 0];	//0，比赛桌子剩余情况
+	optional string sinfo = 2 [default = ""];//消息体
+}
+/////////////////////////////////match end////////////////////////////////
+////////////////////////////////金币/////////////////////////////////////
+//外部因素造成的金币变动
+message control_change_golds			//ACK|OGID_CONTROL_ADD_GOLDS  9480
+{
+	optional int32 uid = 1 					[default = 0];	//用户ID
+	optional int32 changegolds = 2 			[default = 0];	//金币变动
+}
+message control_user_tuoguan		 //ACK|GLID_OPERATION_TRUSTEESHIP  12835 托管了取消托管
+{
+	optional int32 rel = 1 [default = -1]; //状态，0托管,1取消托管
+	optional int32 uid = 2 [default = 0];//用户ID
+	optional int32 pos = 3 [default = 0];//用户位置
+}
+message control_game_operation_open //REQ|GLID_OPERATION_OPEN 12831	桌主点击开始游戏
+{
+	optional int32 rel = 1 			[default = 1];	//状态，0成功;>0,失败原因
+	optional int32 uid = 2 			[default = 0];	//用户ID
+	optional int32 pos = 3 			[default = 0];	//用户位置
+}
+//玩家自己的位置改变(下行)
+//msgID=12576
+message ChangeSeatRespone
+{
+	optional int32 ChairID = 1;	//新的位置
+	optional int32 TableID = 2;	//房间号
+}
+message control_game_pokercard      //ACK|GLID_OPERATION_CARDS  //12808 发送玩家牌信息
+{
+	optional int32 uid = 1 [default = 0];				//用户ID
+	repeated int32 cs = 2	 [packed = true];			//用户手上的牌
+	optional int32 leftcards = 3 [default = 0];	//剩余牌数
+	optional int32 newcard = 4 [default = 0];		//新发的牌,补牌时用
+	optional string vginfo = 5 [default = ""];			//游戏信息:JSON
+}
+message control_game_pokercards	//重播的时候用的
+{
+	message userinfo
+	{
+		optional int32 uid = 1[default = 0];//用户ID
+		repeated int32 cs  = 2;							//用户手上的牌
+		optional string vginfo = 3 [default = ""];			//游戏信息:JSON
+	}
+	repeated userinfo nuserinfo=1;
+}

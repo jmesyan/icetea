@@ -7,6 +7,10 @@ const grpcLib = require('@grpc/grpc-js');
 const pkgDefine = protoLoader.loadSync(PROTO_PATH);
 const protos = grpcLib.loadPackageDefinition(pkgDefine).protos;
 
+var fs = require('fs');
+var protobuf = require('protocol-buffers');
+var messages = protobuf(fs.readFileSync(__dirname+'/protos/chat.proto'));
+
 Buffer.prototype.toByteArray = function () {
    return Array.prototype.slice.call(this, 0)
 }
@@ -39,9 +43,10 @@ gs.start = function() {
 };
 
 function rpcService(call){
+    console.log("call come", call.metadata._internal_repr.gid);
     call.on('data', function(message){
-        console.log(message);
-        var data = (new Buffer("welcome")).toByteArray();
+        console.log(message, messages.JoinResponse.decode(message.data));
+        var data = messages.UserMessage.encode({Name:"jmesyan", Content:"good"});
         var res = {cid:101, cmd:201, n:301, t:401, data:data}
         call.write(res);
     });

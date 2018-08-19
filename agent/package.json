@@ -5,10 +5,15 @@
     "dependencies": {
         "@grpc/grpc-js": "^0.2.0",
         "@grpc/proto-loader": "^0.3.0",
+        "bluebird": "^3.5.1",
         "google-protobuf": "^3.0.0",
         "grpc": "^1.0.0",
+        "memcached": "^2.2.2",
+        "moment": "^2.22.2",
         "pomelo": "^2.2.5",
         "protobufjs": "^6.8.8",
-        "protocol-buffers": "^4.0.4"
+        "protocol-buffers": "^4.0.4",
+        "util": "^0.11.0",
+        "hotwork": "file:hotwork"
     }
 }

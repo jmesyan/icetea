@@ -1,0 +1,10 @@
+{
+	"development": {
+		"host": "192.168.6.168:11211",
+		"prefix": "SHMJPoker:"
+	},
+	"production": {
+		"host": "192.168.6.168:11211",
+		"prefix": "SHMJPoker:"
+	}
+}

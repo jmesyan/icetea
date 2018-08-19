@@ -1,0 +1,17 @@
+//此文件不能随便更新，更新必重启！！！！
+module.exports.localeData = {};
+module.exports.users = {};
+module.exports.serversort = {};
+module.exports.alltablesort = {};
+module.exports.channels = {};
+module.exports.uidToCid = {};
+module.exports.protoMsg = null;
+module.exports.p2p = {};
+module.exports.sys = {};
+module.exports.props = {};
+module.exports.emojis = {};
+module.exports.exps = {};
+module.exports.vipConfig = {};
+module.exports.clientInfo={serverVersion:2,version:0};
+module.exports.bs = { };
+module.exports.tablePeopNum = {};

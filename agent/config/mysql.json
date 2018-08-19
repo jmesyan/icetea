@@ -1,0 +1,19 @@
+{
+	"development": {
+		"host": "192.168.6.168",
+		"port": "3306",
+		"database": "shmj",
+		"user": "root",
+		"password": "newlife",
+		"maxconnections": 100
+	},
+
+	"production": {
+		"host": "192.168.6.168",
+		"port": "3306",
+		"database": "shmj",
+		"user": "root",
+		"password": "newlife",
+		"maxconnections": 100
+	}
+}

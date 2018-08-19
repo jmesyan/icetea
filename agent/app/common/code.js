@@ -1,0 +1,32 @@
+module.exports = {
+	OK: 200, //成功
+	FAIL: 500, //失败
+	CHANNEL: {
+		NOT_FOUND: 4001 //未发现
+	},
+	QUIT: {
+		DUPLICATE_LOGIN: 1, //克隆登录
+		GAME_CLOSE: 2, //游戏关闭
+		SERVER_MATAINING: 3, //游戏维护
+		ACCOUNT_LOCK: 4 //账号锁定
+	},
+	GOLD: {
+		P2P_USE_ROOMCARD: 166, //消耗星卡
+		P2P_REFUND_ROOMCARD: 167, //退还星卡
+		P2P_MATCH_SIGN_USE_ROOMCARD: 124, //比赛报名消耗星卡
+		P2P_MATCH_SIGN_REFUND_ROOMCARD: 125,//比赛报名退还星卡
+		P2P_MATCH_SIGN_USE_MTICKET: 122,//比赛报名消耗门票
+		P2P_MATCH_SIGN_USE_STONE: 133, //比赛报名消耗钻石
+		P2P_MATCH_SIGN_REFUND_STONE: 134,//比赛报名退还钻石
+		P2P_PROP_USE: 110,//互动道具消耗
+		P2P_MATCH_REVIVE_ROOMCARD:138,//天梯赛房卡复活
+		P2P_MATCH_REVIVE_STONES:139,//天梯赛钻石复活
+		P2P_MATCH_UNSIGN_MTICKET: 137//取消比赛返还门票
+	},
+	TICKET:{
+		P2P_USER_TICKET: 231, //结束赠送礼券
+		P2P_MATCH_SIGN_USE_TICKET: 127,//比赛报名消耗礼券
+		P2P_MATCH_SIGN_REFUND_TICKET: 128,//比赛报名退还礼券
+		P2P_MATCH_REVIVE_TICKET:137//天梯赛复活
+	}
+};

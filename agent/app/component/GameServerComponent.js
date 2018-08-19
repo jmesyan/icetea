@@ -1,6 +1,6 @@
 var log = require('pomelo-logger').getLogger('game', 'GameServerCommponent');
 var pomelo = require("pomelo");
-var GameServerManager = require("../services/GameServerManager");
+var hot = require("../services/HotHelper");
 
 module.exports = function(app, opts) {
     return new GameServerComponent(app, opts);
@@ -22,10 +22,9 @@ server.afterStart = function(cb) {
     // log.warn('GameServers will start Listen afterStart 1000s');
     console.log("GameServerComponent init");
     setTimeout(function() {
-        var c = pomelo.app.get("gameServerConfig");
-        // console.log( "the type of GameServerManager is:", typeof GameServerManager, ", the GameServerManager is:",GameServerManager);
-        var manager = new GameServerManager();
-        if (c && c.host) manager.start();
+        if(pomelo.app.getServerType()=="game"){
+            hot.getGameServerManager().start();
+        }
     }, 2000);
 
     process.nextTick(cb);

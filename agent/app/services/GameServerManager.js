@@ -45,6 +45,7 @@ gs.start = function() {
 function rpcService(call){
     console.log("call come", call.metadata._internal_repr.gid);
     call.on('data', function(message){
+        console.log(11111);
         console.log(message, messages.JoinResponse.decode(message.data));
         var data = messages.UserMessage.encode({Name:"jmesyan", Content:"good"});
         var res = {cid:101, cmd:201, n:301, t:401, data:data}

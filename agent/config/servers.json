@@ -5,6 +5,9 @@
     ],
     "game":[
          {"id":"game-server-1", "host":"127.0.0.1", "port":6050}
+    ],
+    "db": [
+      { "id": "db-server-1", "host": "127.0.0.1", "port": 7534}
     ]
   },
   "production":{
@@ -13,6 +16,9 @@
     ],
     "game":[
          {"id":"game-server-1", "host":"127.0.0.1", "port":6050}
+    ],
+    "db": [
+      { "id": "db-server-1", "host": "127.0.0.1", "port": 7534}
     ]
   }
 }

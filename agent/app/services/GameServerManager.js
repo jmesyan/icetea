@@ -85,22 +85,25 @@ gs.getServerByGID = function(gid) {
     return null;
 };
 
-function rpcService(call){
-    var gids = call.metadata._internal_repr.gid;
-    if (!gids || !tools.isArray(gids))  {
-        console.log("can't find the gid metadata");
-        return call.end();
-    }
-    var gid = parseInt(gids[0]);
-    if (gid  <= 1000) {
-        console.log("the gid info is error, now is:", gid);
-        return call.end();
-    }
 
-    var gserver = serversort[gid];
+function rpcService(call){
+    var gsids = call.metadata._internal_repr.gsid;
+    if (!gsids || !tools.isArray(gsids))  {
+        console.log("can't find the gid metadata", gsids);
+        return call.end();
+    }
+    var gid = parseInt(gsids[0]), rtype = parseInt(gsids[1]), ridx = parseInt(gsids[2]);
+    if (gid  <= 1000 || rtype < 0 || ridx < 0) {
+        console.log("the gid info is error, now is:", gid, rtype, ridx);
+        return call.end();
+    }
+    gsid = gid + "_" + rtype + "_" + ridx;
+    console.log("the gsid is:", gsid, gid,rtype,ridx)
+    var gserver = serversort[gsid];
     if (!gserver) {
-        console.log("init gid server:", gid);
-        gserver  = new GameServer(gid);
+        console.log("init gsid server:", gsid);
+        gserver  = new GameServer(call);
+        gserver.init(ridx, rtype, gid);
     }
 
     call.on('data', function(message){
@@ -108,8 +111,14 @@ function rpcService(call){
     });
 
     call.on('end', function(){
-        call.end();
+        gserver.dispose();
     });
+    
+    setTimeout(function(){
+        var data = messages.UserMessage.encode({Name:"jmesyan", Content:"good"});
+        var res = {cid:0, route:"room.join", cmd:0, n:0, t:0, data:data}
+        call.write(res)
+    }, 300);
 }
 
 module.exports = {

@@ -18,7 +18,7 @@ var ProtoManager = function() {
 var pm = ProtoManager.prototype;
 
 pm.reloadData = function() {
-	protoMsg = null;
+	protoMsg = {};
 	protoMsg = protobuf(fs.readFileSync(protoFile));
 	log.warn("Load proto", protoFile, "file ok!");
 };

@@ -59,37 +59,13 @@ dbm.updateUserOnlineTime = function(uid, start, cb) {
 	if (cb) cb();
 };
 
-dbm.updateUserLiushuiCards = function(uid, day, cards, cb) {
-	var sql = '';
-	if (cards > 0) {
-		sql = 'insert into log_user_liushui(ldate, uid, cards) value('+day+','+uid+','+cards+') on duplicate key update cards=cards+' + cards;
-	} else {
-		sql = 'insert into log_user_liushui(ldate, uid, cards) value('+day+','+uid+','+cards+') on duplicate key update cards=cards-' + (-cards);
-	}
-	
-	pomelo.app.get('db').newQuery(sql);
-	if(cb) cb();
-}
-
-dbm.updateUserVipCards = function(uid, cards, cb) {
-	var sql = '';
-	if (cards > 0) {
-		sql = 'update game_userfield SET vip_card = vip_card +' + cards + ' where uid='+uid;
-	} else {
-		sql = 'update game_userfield SET vip_card = vip_card -' + (-cards) + ' where uid='+uid;
-	}
-	
-	pomelo.app.get('db').newQuery(sql);
-	if(cb) cb();
-}
-
 //创建房间
 dbm.createUserRooms = function (obj, lid, cb) {
 	obj.ltime = Math.round(+new Date() / 1000);
 	var sql = 'insert into log_create_rooms set ?';
 	pomelo.app.get('db').query(sql, obj, function(result){
 		if (cb) cb(result && result.insertId ? result.insertId : 0);
-
+		
 		if (!result || !result.insertId) return;
 		obj.lid = result.insertId;
 
@@ -99,12 +75,12 @@ dbm.createUserRooms = function (obj, lid, cb) {
 		if (lid) pomelo.app.get('db').query('update log_user_golds set lid2=? where lid=?', [obj.lid, lid]);
 	});
 };
+//房间结束
 dbm.removeUserRoomByCode = function(code, cb) {
 	var sql = 'delete from game_mj_rooms where code=?';
 	pomelo.app.get('db').query(sql, [code]);
 	if (cb) cb();
 };
-//房间结束
 dbm.removeUserRooms = function (code, state, cb) {
 	var sql = 'select lid from game_mj_rooms where code=?';
 	pomelo.app.get('db').query(sql, [code], function(r){
@@ -132,7 +108,6 @@ dbm.addRoomCards = function(uid, num, reasonno, reason, gameid, code, cb) {
 		if (result && result[0]) cb(result[0][0]); else cb(null);
 	});
 };
-
 //加礼券
 dbm.addTickets = function(uid, num, reasonno, reason, gameid, cb) {
 	pomelo.app.get('db').query('call addtickets(?,?,?,?,?);', [gameid||0, uid, num, reasonno, reason], function(result) {
@@ -140,17 +115,48 @@ dbm.addTickets = function(uid, num, reasonno, reason, gameid, cb) {
 		if (result && result[0]) cb(result[0][0]); else cb(null);
 	});
 };
-
 //查询用户信息
 dbm.getUser = function(uid, cb) {
 	var sql = "select * from yly_member inner join game_userfield using(uid) where uid=" + uid;
 	pomelo.app.get('db').q_first(sql).done(cb);
 };
+//查询用户流水
+dbm.getUserLiushui = function(ldate, uid, cb){
+	var sql = "select * from log_user_liushui where ldate=? and uid=?";
+	pomelo.app.get('db').q_first(sql, [ldate, uid]).then(function (r) { return r; }).done(cb);
+}
 //配置
 dbm.getGameConfig = function(id, cb) {
 	var sql = "select cvalue from game_config where cid=" + id;
 	pomelo.app.get('db').q_first(sql).then(function(r){ return r && r.cvalue ? parseInt(r.cvalue) || 0 : 0 }).done(cb);
 };
+dbm.getClub = function(uid, cb) {
+	var sql = 'select * from p2p_club where guid = ' + uid;
+	pomelo.app.get('db').q_first(sql).then(function(r){ return r; }).done(cb);
+};
+dbm.addCPStones = function(puid,cpid,type,num,uid,code,cb){
+	pomelo.app.get('db').query('call addCPStones(?,?,?,?,?,?);', [puid,cpid,type,num,uid,code], function(result) {
+		if (result && result[0]) cb(result[0][0]); else cb(null);
+	});
+}
+dbm.getCPMember = function(uid,cpid,cb){
+	var sql = 'select * from p2p_cp_member where uid = ? and cpid = ? and state = 1';
+	pomelo.app.get('db').q_first(sql, [uid, cpid]).then(function(r){ return r; }).done(cb);
+}
+dbm.getClubMember = function(uid,clubid,cb){
+	var sql = 'select * from p2p_club_member as a inner join p2p_club as b on a.guid = b.guid where a.uid = ? and b.puid = ? and a.state = 1';
+	pomelo.app.get('db').q_first(sql, [uid, clubid]).then(function(r){ return r; }).done(cb);
+}
+dbm.getCompartment = function(cpid,cb){
+	var sql = 'select * from p2p_compartment where id = ?';
+	pomelo.app.get('db').q_first(sql, [cpid]).then(function(r){ return r; }).done(cb);
+}
+dbm.getClubById = function(clubid, cb) {
+    var sql = 'select * from p2p_club where puid = ' + clubid;
+    pomelo.app.get('db').q_first(sql).then(function(r){ return r; }).done(cb);
+}
+
+//vip系统
 //更改用户信息
 dbm.updateUser = function(uid, level, experience, cb){
 	pomelo.app.get('db').query('update game_userfield set level = ?,experience = experience + ? where uid = ?', [level, experience, uid]);
@@ -160,13 +166,13 @@ dbm.updateUser = function(uid, level, experience, cb){
 //记录普通升级信息
 dbm.logUserLevel = function(uid, level, cb) {
     var ltime = Math.round(+new Date() / 1000);
-    var sql = 'insert ignore into log_user_level(uid, level, ltime) values('+uid+','+level+','+ltime+')';
+    var sql = 'insert into log_user_level(uid, level, ltime) values('+uid+','+level+','+ltime+')';
     pomelo.app.get('db').newQuery(sql);
     if (cb) cb();
 }
 //增加玩家道具
-dbm.addUserProp = function(uid, pid, cb){
-	pomelo.app.get('db').q_first('call adduserprops(?,?,?,@ret)', [uid, pid, 0]).then(function(r){return r;}).done(cb);
+dbm.addUserProp = function(uid, pid, gstate, gtimelen, cb){
+	pomelo.app.get('db').q_first('call adduserprops(?,?,?,?,@ret)', [uid, pid, gstate, gtimelen]).then(function(r){return r;}).done(cb);
 };
 dbm.getGameLevel = function(cb){
 	pomelo.app.get('db').q_query('select * from game_level').then(function(r){return r;}).done(cb);
@@ -179,7 +185,7 @@ dbm.addUserRound = function(uid,cb){
 	if (cb) cb();
 };
 dbm.getUserProps = function(uid,cb){
-	pomelo.app.get('db').q_query('select a.pid,a.expire from user_props as a inner join game_props as b on a.pid = b.pid where uid = ' + uid + ' and b.type = 1').then(function(r){return r;}).done(cb);
+	pomelo.app.get('db').q_query('select * from user_props where uid = ' + uid).then(function(r){return r;}).done(cb);
 };
 dbm.getGameProps = function(cb){
 	pomelo.app.get('db').q_query('select * from game_props').then(function(r){return r;}).done(cb);
@@ -201,22 +207,21 @@ dbm.getGameEmojis = function(cb){
 dbm.getUserEmoji = function(uid,eid,cb){
     pomelo.app.get('db').q_first('select * from user_emojis where uid = ? and eid = ?',[uid,eid]).then(function(r){return r;}).done(cb);
 };
-dbm.addUserEmoji = function(uid, emoji, buy_state, cb){
-    log.warn('addUserEmoji', uid, emoji);
-    var ltime = Math.round(+new Date() / 1000);
-    var sql = 'insert into user_emojis(uid, eid, type, `order`, ltime, buy_state, state) values('+uid+','+emoji.eid+','+emoji.type+','+emoji.order+','+ltime+','+buy_state+', 1)';
-    pomelo.app.get('db').newQuery(sql);
-    if (cb) cb();
+dbm.addUserEmoji = function(uid, eid, state, buy_state, gstate, gtimelen, cb){
+    log.warn('addUserEmoji', uid, eid);
+    pomelo.app.get('db').q_first('call adduseremojis(?,?,?,?,?,?,@ret)', [uid, eid, state, buy_state, gstate, gtimelen]).then(function(r){return r;}).done(cb);
 };
 dbm.getUserEmojis = function(uid,cb){
     pomelo.app.get('db').q_query('select * from user_emojis where uid = ' + uid).then(function(r){return r;}).done(cb);
 };
 dbm.getMatchConfig = function (cb) {
 	var unix = Math.round(+new Date() / 1000);
-	var sql = "select *,ifnull((select mlid from match_mlid where mid = game_match_config.mid),0) mlid from game_match_config where (ntype = 1 and endtime > "+unix+" and status = 1) or ntype = 2 or (ntype = 3 and ((times = 0 and endtime > "+unix+") or times > 0) and status = 1) or (ntype = 5 and status = 1) order by starttime desc";
+	var date = parseInt((new Date()).format('yyyyMMdd'));
+	var sql = "select *,ifnull((select mlid from match_mlid where mid = game_match_config.mid),0) mlid"
+	sql += " from game_match_config where ((ntype=4 and status=1 and enddate>="+date+") or (ntype=3 and endtime > "+unix+") or ntype = 2) order by starttime desc";
 	pomelo.app.get('db').q_query(sql).then(function(r){
 		var matchs = {};
-		if (r) for(var i = 0,len = r.length; i<len; i++) {
+		for(var i = 0,len = r.length; i<len; i++) {
 			r[i].game = JSON.parse(r[i].game);
 			r[i].award = JSON.parse(r[i].award);
 			matchs[r[i].mid] = r[i];
@@ -226,40 +231,13 @@ dbm.getMatchConfig = function (cb) {
 };
 
 dbm.getUserMatchScore = function(mid, mlid, uid, cb) {
-	var sql = "select score from user_match_score where mid=? and uid=? and mlid = ? order by day desc";
+	var sql = "select score from user_match_score where mid=? and uid=? and mlid = ?";
 	pomelo.app.get('db').q_first(sql, [mid, uid, mlid]).then(function(r){ return r; }).done(cb);
 };
-
-
-//创建房间消耗卡记录
-dbm.createUserPrepaid = function (data, cb) {
-	data.ltime = Math.round(+new Date() / 1000);
-	var sql = 'insert ignore into game_mj_prepaid set ?';
-	pomelo.app.get('db').query(sql, data);
-	if (cb) cb();
-};
-dbm.deleteUserPrepaid = function(code, cb) {
-	var sql = 'delete from game_mj_prepaid where code=?';
-	pomelo.app.get('db').query(sql, [code]);
-	if (cb) cb();
-};
-dbm.getAllPrepaid = function(cb){
-	var now = Math.round(+new Date() / 1000) - 3 * 60 * 60;
-	pomelo.app.get('db').q_query('select * from game_mj_prepaid where isowner=1 and ltime>=?', [now]).then(function(r){return r;}).done(cb);
-};
-dbm.updateRoomCardLog = function (code, cards, cb) {
-	var sql = 'update log_create_rooms set cards=? where lid=(select lid from game_mj_rooms where code=? limit 1)';
-	pomelo.app.get('db').query(sql, [cards, code]);
-	if (cb) cb();
-};
-dbm.matchSign = function(uid, mid, obj, cb){
+dbm.matchSign = function(uid, mid, mlid, cb){
 	var ltime = Math.round(+new Date() / 1000);
-	var mlid = obj.mlid;
-	var paytype = obj.paytype;
-	var tickettype = obj.tickettype;
-	var cost = obj.cost;
-	var sql = 'insert into log_match_sign (uid,mid,mlid,ltime,paytype,tickettype,cost) value (?,?,?,?,?,?,?)';
-	pomelo.app.get('db').query(sql, [uid, mid, mlid, ltime,paytype,tickettype,cost], function(result) {
+	var sql = 'insert into log_match_sign (uid,mid,mlid,ltime) value (?,?,?,?)';
+	pomelo.app.get('db').query(sql, [uid, mid, mlid, ltime], function(result) {
 		if (cb) cb(result && result.insertId ? parseInt(result.insertId) : 0);
 	});
 }
@@ -273,27 +251,22 @@ dbm.getMatchSignTimes = function(uid,mid,cb){
 	var sql = "select count(1) total from log_match_sign where uid = ? and mid = ? and ltime >= ? and state in (0,3)";
 	pomelo.app.get('db').query(sql, [uid, mid, time], function(result) {;if (cb) cb(result && result[0] && result[0].total ? parseInt(result[0].total) : 0);});
 }
-dbm.addmatchticket = function(uid, tickettype, ticket, reasonno, reason, cb){
-	pomelo.app.get('db').query('call addmatchticket(?,?,?,?,?);', [uid, reasonno, tickettype, ticket, reason], function(result) {
-		if (result && result[0]) cb(result[0][0]); else cb(null);
-	});
-}
 dbm.matchmlid = function(mid,cb){
 	pomelo.app.get('db').query('call match_mlid(?);', [mid], function(result) {
 		if (result && result[0]) cb(result[0][0]); else cb(null);
 	});
 }
-dbm.getCSMatchSign = function(uid,mid,date,cb){
-	var sql = "select uid,state from match_cs_user where uid=? and mid=? and date=?";
-	pomelo.app.get('db').q_first(sql, [uid,mid,date]).then(function(r){return r; }).done(cb);
+dbm.getCSMatchSign = function(uid,mid,cb){
+	var sql = "select uid,state from match_cs_user where uid=? and mid=?";
+	pomelo.app.get('db').q_first(sql, [uid,mid]).then(function(r){return r; }).done(cb);
 }
-dbm.updateCSMatchSign = function(uid,mid,date,cb){
-	var sql = "update match_cs_user set state = 3 where uid = ? and mid = ? and date = ?";
-	pomelo.app.get('db').query(sql, [uid, mid, date]);
+dbm.updateCSMatchSign = function(uid,mid,cb){
+	var sql = "update match_cs_user set state = 3 where uid = ? and mid = ?";
+	pomelo.app.get('db').query(sql, [uid, mid]);
 	if (cb) cb();
 }
 dbm.getMotors = function(num,cb){
-	var sql = "select a.uid from yly_motor as a inner join yly_member as b on a.uid = b.uid inner join game_userfield as c on a.uid = c.uid and a.state = 0 and a.gameid = 1 order by a.uid desc limit ?";
+	var sql = "select * from yly_motor as a inner join yly_member as b on a.uid = b.uid inner join game_userfield as c on a.uid = c.uid and a.state = 0 order by uid desc limit ?";
 	pomelo.app.get('db').q_query(sql,[num]).then(function(r){return r;}).done(cb);
 }
 dbm.updateMotor = function(uids,cb){
@@ -301,75 +274,69 @@ dbm.updateMotor = function(uids,cb){
 	pomelo.app.get('db').query(sql);
 	if (cb) cb();
 }
-dbm.updateMotorByUid = function(uid,cb){
-	var sql = 'update yly_motor set state = 0 where uid = ?';
-	pomelo.app.get('db').query(sql,[uid]);
+dbm.removeMatchRooms = function (gsid, tid, cb) {
+	var sql = 'select lid from game_mj_rooms where gsid=? and tid=?';
+	pomelo.app.get('db').query(sql, [gsid,tid], function(r){
+		if (!r || r.length == 0) return;
+		var lid = r[0].lid;
+
+		var sql = 'update log_create_rooms set state=1,endtime=? where lid=?';
+		pomelo.app.get('db').query(sql, [Math.round(+new Date() / 1000), lid]);
+
+		var sql = 'delete from game_mj_rooms where gsid=? and tid=?';
+		pomelo.app.get('db').query(sql, [gsid,tid]);
+	});
 	if (cb) cb();
-}
-dbm.addStones = function(gameid,uid,stones,reason,reasonno,code,cb){
-	pomelo.app.get('db').query('call addstones(?,?,?,?,?,?);', [gameid||0, uid, stones, reasonno, reason, code||0], function(result) {
-		if (result && result[0]) cb(result[0][0]); else cb(null);
-	});
-}
-dbm.sendProp = function(uid,touid,code,pid,price,cash,cb){
-	pomelo.app.get('db').query('call sendprop(?,?,?,?,?,?);', [uid,touid,code,pid,price,cash], function(result) {
-		if (result && result[0]) cb(result[0][0]); else cb(null);
-	});
-}
-dbm.matchHLSign = function(uid,mid,cb){
-	var ltime = Math.round(+new Date() / 1000);
-	var sql = 'insert into match_hl_user (uid,mid,ltime) value (?,?,?)';
-	pomelo.app.get('db').query(sql, [uid, mid, ltime], function(result) {
-		if (cb) cb(result && result.insertId ? parseInt(result.insertId) : 0);
-	});
-}
-dbm.updateMatchHLSign = function(id,state,cb){
-	var sql = 'update match_hl_user set state = ? where id = ?';
-	pomelo.app.get('db').query(sql, [id, state]);
-	if (cb) cb();
-}
-//包间信息
-dbm.addCompartmentRoomCard = function(cid,uid,num,type,cb){
-	var sql = 'call addCompartmentRoomCard(?,?,?,?)';
-	pomelo.app.get('db').q_first(sql,[cid,uid,num,type]).done(cb);
+};
+dbm.getRuningRoomByCode = function(code, cb) {
+    var sql = "select * from  game_mj_rooms  where code=" + code;
+    pomelo.app.get('db').q_first(sql).done(cb);
 }
 
-dbm.getCompartmentMember = function(uid,cid,cb){
-	var sql = "select *, b.status cpstatus from p2p_compartment_member as a " +
-			  "inner join p2p_compartment as b on a.cid = b.id " +
-			  "inner join p2p_family_member as c on b.familyid = c.familyid and a.uid = c.uid where a.uid=" + uid +" and a.cid="+cid;
-	pomelo.app.get('db').q_first(sql).done(cb);
-}
-dbm.compartment = function(cid,uid,card,type,cb){
-	pomelo.app.get('db').query('call compartment(?,?,?,?)',[uid,cid,card,type]);
-	if (cb) cb();
-}
-dbm.getCreateRoom = function(code,cb){
-	var sql = 'select * from game_mj_rooms where code = ?';
-	pomelo.app.get('db').q_first(sql,[code]).done(cb);
-}
-dbm.addMatchPrize = function(data,cb){
-	var sql = 'insert into log_match_prize set ?';
-	pomelo.app.get('db').query(sql, data,function(result){
-		if (cb) cb(result && result.insertId ? parseInt(result.insertId) : 0);
+//金币场
+dbm.addUserGolds = function(gid,uid,golds,reason,reasonno,cb) {
+	pomelo.app.get('db').query('call addbonusgolds(?,?,?,?,?);', [gid||0, uid, golds, reasonno, reason], function(result) {
+		if (result && result[0]) cb(result[0][0]); else cb(null);
 	});
+};
+//创建金币房间
+dbm.createGoldRooms = function (obj, cb) {
+    obj.ltime = Math.round(+new Date() / 1000);
+    var sql = 'insert into log_gold_rooms set ?';
+    pomelo.app.get('db').query(sql, obj, function(result){
+        if (cb) cb(result && result.insertId ? result.insertId : 0);
+    });
+};
+//房间结束
+dbm.removeGoldRooms = function (lid, state, cb) {
+    var etime = Math.round(+new Date() / 1000);
+    var sql = 'update log_gold_rooms set state = ?, etime = ? where lid = ?';
+    pomelo.app.get('db').query(sql, [state, etime, lid]);
+    if (cb) cb();
+};
+//金币掉落日志
+dbm.goldsDropLog = function(uid,redpack,gid,rtype,ridx,state,cb){
+	var unix = Math.round(+new Date() / 1000);
+	var sql = 'insert into log_golds_redpack(uid,redpack,gid,rtype,ridx,state,ltime)value(?,?,?,?,?,?,?)';
+	pomelo.app.get('db').query(sql,[uid,redpack,gid,rtype,ridx,state,unix]);
+	if(cb) cb();
 }
-dbm.updateCSMatchRank = function(mid,uid,date,id,cb){
-	var sql = 'update match_cs_user set rid = ? where uid = ? and mid = ? and date = ?';
-	pomelo.app.get('db').query(sql, [id, uid, mid, date]);
+
+//获取活动配置
+dbm.getActivityConfig = function (acid, cb) {
+	pomelo.app.get('db').q_query('select * from activity_config where ac_id = ' + acid).then(function (r) { return r; }).done(cb);
+}
+
+dbm.matchYQRank = function(mid,date,cb){
+	var sql = 'call crontab_match_yqrank(?,?)';
+	pomelo.app.get('db').query(sql, [mid,date]);
 	if (cb) cb();
-}
-dbm.updateCSMatchState = function(mid,date,cb){
-	var sql = 'update match_cs_user set isend = 1 where mid = ? and date = ?';
-	pomelo.app.get('db').query(sql, [ mid, date]);
-	if (cb) cb();
-}
-dbm.getCSBMUser = function(mid,date,cb){
-	var sql = 'select count(1) total from match_cs_user where mid = ? and date = ?';
-	pomelo.app.get('db').query(sql,[mid,date],function(result){
-		if (cb) cb(result && result[0] && result[0].total ? parseInt(result[0].total) : 0);
-	});
-}
+};
+
+dbm.getYQSign = function(uid,mid,date,cb){
+	var sql = 'select *,ifnull((select count(1) from match_yq_user where mid = a.mid and date = a.date),0) total from match_yq_user a where a.uid = ? and a.mid = ? and a.date = ?';
+	pomelo.app.get('db').q_first(sql, [uid,mid,date]).then(function(r){ return r; }).done(cb);
+};
 
 module.exports = {
 	name: "hall",

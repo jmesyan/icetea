@@ -8,15 +8,14 @@ var CMD = require('../common/GameConst');
 
 var tools = require("../GameUtils/Tools");
 var sys = require("./StoreDatas").sys;
+var bs = require("./StoreDatas").bs;
+//vip系统
 var props = require("./StoreDatas").props;
 var emojis = require("./StoreDatas").emojis;
 var vipConfig = require("./StoreDatas").vipConfig;
-var bs = require("./StoreDatas").bs;
-var p2p = require("./StoreDatas").p2p;
 var serversort = require("./StoreDatas").serversort;
 
 var PhpApiServer = function() {};
-var test_uid = 11000;
 
 PhpApiServer.prototype.start = function() {
 	var config = pomelo.app.get("apiServerConfig");
@@ -47,9 +46,10 @@ PhpApiServer.prototype.start = function() {
 		sys.SEND_TICKET = r;
 		log.info('SEND_TICKET', sys);
 	});
+	//vip系统
 	pomelo.app.rpc.db.dbRemote.getGameProps(null,function(r){
 		if (r) for(var key in r) props[r[key].pid] = r[key];
-		log.info('props', JSON.stringify(props));
+		//log.info('props', props);
 	});
 	pomelo.app.rpc.db.dbRemote.getVipConfig(null,function(r){
 		if (r) for(var key in r) vipConfig[r[key].vip_level] = r[key];
@@ -64,13 +64,6 @@ PhpApiServer.prototype.start = function() {
         log.info('emojis', JSON.stringify(emojis));
     });
 	loadMatchConfig({},{});
-
-	//加载 在线用户创建的消耗的星卡信息
-	pomelo.app.rpc.db.dbRemote.getAllPrepaid(null,function(r){
-		p2p.prepaid = {};
-		for (var key in r) p2p.prepaid[r[key].code] = r[key];
-		log.info('预付卡信息加载', JSON.stringify(p2p.prepaid));
-	});
 };
 
 function loadMatchConfig(obj,match) {
@@ -80,8 +73,13 @@ function loadMatchConfig(obj,match) {
 			bs.ms = r; bs.gs = bs.gs || {}; bs.ss = {}; bs.es = bs.es || {}; bs.cs = {}; bs.ts = {}; bs.ur = bs.ur || {};
 			bs.bm = bs.bm || {};
 			var now = tools.getSystemSecond();
+			var today = tools.getTodaySecond();
 			for(var key in r) {
 				bs.ss[key] = 0;
+				if(r[key].ntype == 4) {
+					r[key].starttime =  today + r[key].starttime*3600;
+					r[key].endtime = r[key].starttime+60*r[key].endtime;
+				}
 				if (now > r[key].starttime && now < r[key].endtime) {
 					bs.gs[r[key].gid] = key;
 					bs.ss[key] = 1;
@@ -98,18 +96,20 @@ function loadMatchConfig(obj,match) {
 					if(server) {
 						console.log("01RLMA" + obj.mid +'|' +obj.type);
 						server.sendString("01RLMA" + obj.mid +'|' +obj.type);
+					} else {
+						console.error("比赛{0}没有中心服务器".format(obj.mid));
 					}
 					if(obj.type == 0){
 						for(var mgsid in serversort){
 							if(match.gid == serversort[mgsid].gid){
 								var tables = serversort[mgsid].tablesort,mtids = [];
 								for (var tid in tables) mtids.push(parseInt(tid));
-								server.n2s(serversort[mgsid].gid,serversort[mgsid].rtype,serversort[mgsid].ridx,"01",JSON.stringify(mtids));
+								if(server) server.n2s(serversort[mgsid].gid,serversort[mgsid].rtype,serversort[mgsid].ridx,"01",JSON.stringify(mtids));
 							}
 						}
 					} else if(obj.type == 1){
 						var h = tools.getHour();
-						if(match.ntype == 1 && now > match.starttime && now < match.endtime) pomelo.app.get('matchYQServer').matchEnd(match.gid,match.mid);
+						if(match.ntype == 4 && now > match.starttime && now < match.endtime) pomelo.app.get('matchYQServer').matchEnd(match.gid,match.mid);
 						if(match.ntype == 2 && h >= match.starttime && h <= match.endtime) pomelo.app.get('matchCGServer').matchEnd(match.gid,match.mid);
 						if(match.ntype == 3 && now > match.starttime && now < match.endtime) pomelo.app.get('matchCSServer').matchEnd(match.gid,match.mid);
 					}
@@ -117,6 +117,8 @@ function loadMatchConfig(obj,match) {
 			}
 		}
 		log.info('getMatchConfig', JSON.stringify(bs.ms));
+		log.info('getMatchConfigss', JSON.stringify(bs.ss));
+		log.info('getMatchConfigcs', JSON.stringify(bs.cs));
 	});
 }
 
@@ -173,7 +175,8 @@ ApiPipe.prototype.onData = function(data) {
 				player.room_card = parseInt(obj.totals) || 0;
 				player.sendMsg(CMD.pushCmd.roomCardsChange, {
 					room_card: player.room_card,
-					cards: obj.cards
+					cards: obj.cards,
+					card_use:player.card_use
 				});
 			}
 
@@ -183,10 +186,7 @@ ApiPipe.prototype.onData = function(data) {
 		case "LABA": //{type,text}
 			//通知游戏服务器大喇叭
 			var channel = pomelo.app.get('channelService').getChannel(GameConst.ChanelName.hall);
-			var data = { type: obj.type, text: obj.text };
-			if (obj.num) data.num = obj.num; //播放次数
-			if (obj.time) data.time = obj.time; //间隔时长(秒)
-			if (channel) channel.pushMessage(GameConst.pushCmd.laba, data);
+			if (channel) channel.pushMessage(GameConst.pushCmd.laba, { type: obj.type, text: obj.text });
 			result = { answer: true };
 			this.sendObj(result);
 			break;
@@ -196,23 +196,30 @@ ApiPipe.prototype.onData = function(data) {
 			result = {
 				answer: true
 			};
-			setTimeout(function() {
-				log.warn('WEBK_USER', 'setTimeout', obj.uids);
-				for (var i in obj.uids) {
-					var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uids[i]);
-					if (player.cid) {
-						//存在游戏，干
-						log.info('WEBK_USER', 'logoutGame', player.cid);
-						var channel = hotHelper.getGameChannelManager().getChannel(player.cid);
-						if (channel) channel.logoutGame(true);
-					} else {
-						if (player && player.tableid) {
-							delete player.gsid;
-							delete player.tableid;
-						}
-					}
+			for (var i in obj.uids) {
+				var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uids[i]);
+				if (player && player.tableid) {
+					delete player.gsid;
+					delete player.tableid;
+					delete player.mid;
 				}
-			}, 3000);
+			}
+			this.sendObj(result);
+			break;
+		case "WEBK_USER2"://[{uid,gsid,tid}]
+			pomelo.app.get('gameserverManager').kickUser2(obj.data);
+			result = {
+				answer: true
+			};
+			for (var i in obj.data) {
+				var uid = obj.data[i].uid;
+				var player = pomelo.app.get('usermanager').getOnlineUserSort(uid);
+				if (player && player.tableid) {
+					delete player.gsid;
+					delete player.tableid;
+					delete player.mid;
+				}
+			}
 			this.sendObj(result);
 			break;
 		case "CLOSE_GAME": //{uids}
@@ -233,22 +240,17 @@ ApiPipe.prototype.onData = function(data) {
 			break;
 		case "setMaintenanceList": //部分服务器维护
 			var key = 'SYS_MAINTENANCE_' + obj.id;
-			sys[key] = {n:0,tables:{}};
+			sys[key] = true;
 			pomelo.app.get('mjP2PService').clearMaintenanceServer(obj.id);
 			break;
 		case "UPDATE_CLIENT": //更新版本
-			if(parseInt(obj.v)<=0)return;
-			var temp={v: obj.v};
-			temp.d=false;
-			if(!!obj.other)temp.d=obj.other;
-			pomelo.app.get("cm").broadcastPlayerUpdateClient(temp);
+			pomelo.app.get("cm").broadcastPlayerUpdateClient({v: obj.v});
 			break;
 		case "ADD_TICKET":
 			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
 			if(player) {
-				player.ticket_use =parseInt(obj.ticket_use)||0;
-				player.ticket = obj.ticket;
-				player.sendMsg(GameConst.pushCmd.ticketChange, {ticket: obj.ticket, num: obj.num,ticket_use:player.ticket_use});
+				player.ticket = parseInt(obj.ticket) || 0;
+				player.sendMsg(GameConst.pushCmd.ticketChange, {ticket: obj.ticket, num: obj.num});
 			}
 			break;
 		case "SEND_TICKET":
@@ -272,7 +274,7 @@ ApiPipe.prototype.onData = function(data) {
 		case "DELETE_SERVER":
 			/**
 			 * 删除某个服务器,并不是直接执行析构,gameserver或者gamehubserver还存在,
-			 * 但是执行里面deletetable等动作,将玩家清理出去,在服务器出现问题的时候使用较好
+			 * 但是执行里面deletetable等动作,将玩家清理出去,在服务器出现问题的时候使用较好 
 			 * 这样可以配合CUSTOM_LOGIN指挥某个玩家进入指定区域
 			 */
             var gsid=obj.id;
@@ -282,17 +284,22 @@ ApiPipe.prototype.onData = function(data) {
                 gameserver.dispose();
             }
 			break;
+		case "UPDATEMATCH":
+			var match = obj.mid && bs.ms && bs.ms[obj.mid] ? bs.ms[obj.mid] : {};
+			loadMatchConfig(obj,match);
+			break;
+		//vip系统
 		case 'VipLevel':
 			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
 			if(player) player.sendMsg(GameConst.pushCmd.vipLevel,{vip_level:obj.vip_level,pid:obj.pid,day:obj.day,need_pay:obj.need_pay});
 			break;
 		case 'ADD_EXPS':
-			pomelo.app.get('mjP2PService').addUserExps(obj.uid,obj.exps,obj.type);
+			pomelo.app.get('mjP2PService').addUserExps(obj.uid,obj.exps);
 			break;
 		case 'RELOAD_PROPS':
 			pomelo.app.rpc.db.dbRemote.getGameProps(null,function(r){
 				if(r) for(var key in r) props[r[key].pid] = r[key];
-				log.info('reload_props', JSON.stringify(props));
+				log.info('reload_props', props);
 			});
 			break;
 		case "USE_PROP": //{uid,pid}
@@ -316,26 +323,18 @@ ApiPipe.prototype.onData = function(data) {
 		case 'RELOAD_VIP_CONFIG':
 			pomelo.app.rpc.db.dbRemote.getVipConfig(null,function(r){
 				if(r) for(var key in r) vipConfig[r[key].vip_level] = r[key];
-				log.info('reload_vipConfig', JSON.stringify(vipConfig));
+				log.info('reload_vipConfig', vipConfig);
 			});
 			break;
-		case "RECONN_SERVER":
-			/**
-			 * 强制服务器断开连接,相当于促使游戏服务器重连,重新初始化
-			 */
-			var gsid=obj.id;
-			var gameserver=hotHelper.getGameServerManager().getServerByGSID(gsid);
-			if(!!gameserver) {
-				gameserver.sendString("B");
-			}
-			break;
-		case "PACKET_AWARD"://现金红包活动
-			var channel = pomelo.app.get('channelService').getChannel(GameConst.ChanelName.hall);
-			if (channel) channel.pushMessage(GameConst.pushCmd.packet_award, { type:obj.type,uid:obj.uid,nickname:obj.nickname,money:obj.money,time:obj.time });
-			break;
-		case "UPDATEMATCH":
-			var match = obj.mid && bs.ms && bs.ms[obj.mid] ? bs.ms[obj.mid] : {};
-			loadMatchConfig(obj,match);
+		case 'RELOAD_EMOJIS':
+			pomelo.app.rpc.db.dbRemote.getGameEmojis(null, function(r){
+				if(r) {
+					for(key in r){
+							emojis[r[key].eid] = r[key];
+					}
+				}
+				log.info('reload_emojis', JSON.stringify(emojis));
+			});
 			break;
 		case "FQ_MATCH":
 			log.info('FQ_MATCH',obj);
@@ -362,35 +361,6 @@ ApiPipe.prototype.onData = function(data) {
 				for(var mid in bs.es) if(bs.es[mid][uid]) delete bs.es[mid][uid];
 			}
 			break;
-		case 'RELOAD_EMOJIS':
-			pomelo.app.rpc.db.dbRemote.getGameEmojis(null, function(r){
-				if(r) {
-					for(key in r){
-							emojis[r[key].eid] = r[key];
-					}
-				}
-				log.info('reload_emojis', JSON.stringify(emojis));
-			});
-			break;
-		case "ADD_STONES":
-			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
-			if(player) {
-				player.stones = obj.stones;
-				player.sendMsg(GameConst.pushCmd.stonesChange, {stones: obj.stones, num: obj.num});
-			}
-			break;
-		case "MATCH_TICKET":
-			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
-			if(player) player.sendMsg(GameConst.pushCmd.matchticket, {type: obj.type,all:obj.all, num: obj.num});
-			break;
-		case "USER_IP":
-			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
-			if(player && obj.ip) player.login_ip = obj.ip;
-			break;
-		case "JOIN_FAMILY":
-			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
-			if(player) player.sendMsg(GameConst.pushCmd.familyChange, {familyid:obj.familyid});
-			break;
 		case "MATCH_TIMES":
 			var me = {};
 			if(!!obj.uid && !!bs.at) {
@@ -406,21 +376,10 @@ ApiPipe.prototype.onData = function(data) {
 			}
 			this.sendObj({ answer: true, info: !!bs.cgt ? bs.cgt : {} ,me:me});
 			break;
-		case "BIND_PUID":
-			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
-			if(player) player.bindpuid = obj.puid;
-			break;
 		case "MATCH_USER":
 			var mid = obj.mid;
 			var users = mid && !!bs.su && bs.su[mid] ? bs.su[mid] : {};
 			this.sendObj({ answer: true, info: users});
-		case "JOIN_FAMILY":
-			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
-			if(player) player.sendMsg(GameConst.pushCmd.familyChange, {familyid:obj.familyid});
-			break;
-		case "ACPAY_RESULT":
-			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
-			if(player) player.sendMsg(GameConst.pushCmd.acpayResult, {paykey:obj.paykey, ret:obj.ret, msg:obj.msg});
 			break;
 		case "ADD_GOLD": //{uid,bonusgolds,reasontype,reason}
 			//如果用户在线 通知游戏服务器加线
@@ -428,12 +387,16 @@ ApiPipe.prototype.onData = function(data) {
 			delete obj.timestamp;
 			var player = pomelo.app.get('usermanager').getOnlineUserSort(obj.uid);
 			if (player) {
-				player.golds = obj.totals;
+				player.golds = obj.golds;
+				player.bonus_golds = obj.bonus_golds;
 				player.sendMsg(CMD.pushCmd.changeGolds, { golds: obj.totals, change: obj.bonusgolds, resontype: obj.resontype });
 			}
 			pomelo.app.get('gameserverManager').addGolds(obj, function(obj) {
 				me.sendObj({ 'answer': obj });
 			});
+			break;
+		case "GOLDS_BLACK_LIST":
+			pomelo.app.get("goldService").goldsBlackList(obj.gids, obj.uid, obj.gtype);
 			break;
 	}
 };
@@ -445,22 +408,7 @@ ApiPipe.prototype.sendObj = function(obj) {
 	}
 	if (socket) socket.end();
 };
-ApiPipe.prototype.test = function(){
-	var server = serversort['1_1_10'];
-	if(!server) return;
-	var nowtime = tools.getSystemMillSecond();
-	var callback = function(body){
-		console.log(tools.getSystemMillSecond()-nowtime,JSON.stringify(body));
-	}
-	var cancel = function(b){
-		console.log(tools.getSystemMillSecond()-nowtime,JSON.stringify(b));
-	}
-	for(var i=0;i<3000;i++){
-		server.sendString('03SIGN{0}|{1}|{2}|{3}'.format(pomelo.app.get('gameserverManager').getTick(callback), 648, test_uid, 0));
-		if(Math.random() > 0.5) server.sendString('03USIN{0}|{1}|{2}|{3}'.format(pomelo.app.get('gameserverManager').getTick(cancel), 648, test_uid, 0));
-		test_uid++;
-	}
-}
+
 module.exports = {
 	name: "hall",
 	beans: [{

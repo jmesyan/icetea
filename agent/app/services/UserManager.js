@@ -7,13 +7,13 @@ var Promise = require("bluebird");
 var hotHelper = require("./HotHelper");
 var CPlayer = hotHelper.getGamePlayer();
 var GameChannel = hotHelper.getGameChannelManager();
-var GameConst = hotHelper.getGameConst();
 
 var UserManager = function() {};
 var manager = UserManager.prototype;
 
 //在线玩家数据的索引
 var users = require("./StoreDatas").users;
+var GameConst = require("../common/GameConst");
 
 //添加到玩家索引
 manager.addUserSort = function(uid, sid, userinfo) {
@@ -21,10 +21,7 @@ manager.addUserSort = function(uid, sid, userinfo) {
 
 	if (!!users[uid]) {
 		users[uid].init(userinfo);
-		if (!!sid) {
-			users[uid].sid = sid;
-			if(!!users[uid].reload) delete users[uid].reload;
-		}
+		if (!!sid) users[uid].sid = sid;
 	} else {
 		var user = { uid: uid };
 		tools.extend(user, userinfo);
@@ -34,7 +31,6 @@ manager.addUserSort = function(uid, sid, userinfo) {
 		if (!!sid) users[uid].sid = sid;
 	}
 
-	users[uid].create_time = tools.getSystemMillSecond();
 	if (users[uid].login_date && users[uid].login_date > 0) return Promise.resolve(users[uid]);
 
 	return pomelo.app.get('cache').getUser(uid).then(function(user) {
@@ -53,11 +49,7 @@ manager.addUserSort = function(uid, sid, userinfo) {
 	});
 };
 
-/**
- * 游戏中用户信息
- * @param uid
- * @returns {Player}
- */
+//游戏中用户信息
 manager.getOnlineUserSort = function(uid) {
 	if (!!users[uid]) return users[uid];
 	return false;
@@ -67,19 +59,19 @@ manager.getOnlineUserSort = function(uid) {
 manager.removeUserSort = function(uid, fromGame) {
 	if (!!users[uid]) {
 		var user = users[uid];
-
+		log.info('removeUserSort', 'logoutGame', user.uid);
 		//如果不是游戏发起的删除，则是大厅发起，先清理sid
 		if (!fromGame) delete user.sid;
 
 		//玩家仍在游戏中，搬迁到deleting
-		//只有不在游戏同时不在大厅,不在比赛，彻底删除
-		if (!user.gsid) {
+		//只有不在游戏同时不在大厅，彻底删除
+		if ((!user.gsid) && (!user.sid)) {
 			if (user.cid) {
-				log.info('removeUserSort', 'logoutGame', user.cid);
+				//log.info('removeUserSort', 'logoutGame', user.cid);
 				var channel = GameChannel.getChannel(user.cid);
 				channel.logoutGame();
 			}
-			if(!user.mid && !user.sid) delete users[uid];
+			if(!user.mid)  delete users[uid];
 		}
 		return user;
 	}
@@ -93,7 +85,8 @@ manager.changeOnlineUserGolds = function(uid, golds) {
 	if (!!user) {
 		log.info('changeOnlineUserGolds', uid, golds, user.golds);
 		user.init({
-			golds: golds
+			golds: golds,
+			bonus_golds: 0
 		});
 
 		user.sendMsg(GameConst.pushCmd.changeGolds, { golds: parseInt(user.golds) });

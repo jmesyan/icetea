@@ -52,7 +52,7 @@ CMD = {};
 CMD.OGID_MSGBASE_CONTROLBASE = 0x2500;
 
 CMD.REQ = 0;
-CMD.ACK = 134217728;
+CMD.ACK = 0x8000000;
 exports.CMD = CMD;
 
 var cmdsorts = {};

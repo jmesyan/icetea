@@ -14,12 +14,27 @@ var bs = require("../StoreDatas").bs;
 var serversort = require("../StoreDatas").serversort;
 var alltablesort = require("../StoreDatas").alltablesort;
 
-var GameServer = function(gid) {
-	this.gid = gid;
-	this.startTime = Date.now();
-	this.channels = {};
-	this.isFirstMsg = false;
-	serversort[gid] = this;
+var fs = require('fs');
+var protobuf = require('protocol-buffers');
+var messages = protobuf(fs.readFileSync(__dirname+'/../protos/chat.proto'));
+
+var GameServer = function(socket) {
+	if (!global.gs_inc_id) {
+		global.gs_inc_id = 1;
+	} else {
+		global.gs_inc_id++;
+	}
+	this.id = global.gs_inc_id;
+	GameTable = GameTable || hothelper.getGameTable();
+	this.isFirstMsg = true;
+	this._socket = socket;
+	log.info(("#" + this.id + "#"),"server create new!");
+	var self = this;
+	//3s超时，断开
+	// this.sto = setTimeout(function() {
+	// 	log.error(("#" + self.id + "#"), socket._getpeername(), "go to check server init");
+	// 	self.checkInited();
+	// }, 3000);
 };
 
 var server = GameServer.prototype;
@@ -40,6 +55,7 @@ server.execGameServerCmd = function(body) {
 };
 //解包
 server.onReceivePackData = function(call, message) {
+	this._socket = call;
 	var cid = message.cid;
 	var cmd = message.cmd;
 	var n = message.n;
@@ -203,6 +219,7 @@ server.onReceivePackData = function(call, message) {
 			break;
 		case CMD.OGID_CONTROL_HEART_BEAT | CMD.ACK:
 			var body = ProtoManager.getBody('control_heart_beat', data);
+			console.log("control_heart_beat", JSON.stringify(body))
 			if (!!body.nowstamp) {
 				this.sendHeartBeat(body.nowstamp);
 			} else {
@@ -533,13 +550,10 @@ server.removeTable = function(tableid) {
 server.dispose = function() {
 	log.error(("#" + this.id + "#") + "============服务器{0}析构开始=====================".format(this.toString()));
 	if (!!this._socket) {
-		log.error(("#" + this.id + "#"), this._socket._getpeername());
-		this._socket.removeAllListeners();
+		log.error(("#" + this.id + "#"));
 		this._socket.end();
-		this._socket.destroy();
 		this._socket = null;
 		delete this._socket;
-		this.glBuffer.dispose();
 		delete serversort[this.gsid];
 	}
 	if (!!this.tablesort) {
@@ -633,19 +647,31 @@ server.toString = function() {
 	return JSON.stringify(json);
 };
 
-server.sendString = function(str) {
+// server.sendString = function(str) {
+// 	if (!!this._socket) {
+// 		if (this._socket.writable) {
+// 			this._socket.write(str + "\0");
+// 			return true;
+// 		}
+// 	}
+// 	log.error(("#" + this.id + "#") + "服务端已经断开或毁灭:" + str + "," + this.toString());
+// 	return false;
+// };
+server.sendString  = function(route, cid, t, n, msg){
 	if (!!this._socket) {
-		if (this._socket.writable) {
-			this._socket.write(str + "\0");
-			return true;
-		}
+		var res = {route:route, cid:cid, cmd:0, n:n, t:t, data:msg}
+        this._socket.write(res)
+		return true;
 	}
 	log.error(("#" + this.id + "#") + "服务端已经断开或毁灭:" + str + "," + this.toString());
 	return false;
-};
+}
 
 server.sendHeartBeat = function(t) {
-	this.sendString("02BEAT" + (t || ""));
+	// this.sendString("02BEAT" + (t || ""));
+	console.log("send heartbeat");
+	this.sendString("room.heartbeat",0,0,0,t);
+
 };
 
 server.getUserCount = function() {

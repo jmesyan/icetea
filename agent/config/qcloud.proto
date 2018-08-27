@@ -103,7 +103,7 @@ message control_room_users	//ACK|OGID_CONTROL_RUSERS 9476
 }
 message control_heart_beat	//ACK|OGID_CONTROL_HEART_BEAT 9485
 {
-	required fixed32 nowstamp = 1;
+	required int64 nowstamp = 1;
 }
 message control_client_heart_beat //ACK|OGID_CONTROL_CLIENT_HEART_BEAT 9510
 {

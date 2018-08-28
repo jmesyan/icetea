@@ -219,7 +219,6 @@ server.onReceivePackData = function(call, message) {
 			break;
 		case CMD.OGID_CONTROL_HEART_BEAT | CMD.ACK:
 			var body = ProtoManager.getBody('control_heart_beat', data);
-			console.log("control_heart_beat", JSON.stringify(body))
 			if (!!body.nowstamp) {
 				this.sendHeartBeat(body.nowstamp);
 			} else {
@@ -647,17 +646,9 @@ server.toString = function() {
 	return JSON.stringify(json);
 };
 
-// server.sendString = function(str) {
-// 	if (!!this._socket) {
-// 		if (this._socket.writable) {
-// 			this._socket.write(str + "\0");
-// 			return true;
-// 		}
-// 	}
-// 	log.error(("#" + this.id + "#") + "服务端已经断开或毁灭:" + str + "," + this.toString());
-// 	return false;
-// };
 server.sendString  = function(route, cid, t, n, msg){
+	msg = msg+"";
+	msg = new Buffer(msg);
 	if (!!this._socket) {
 		var res = {route:route, cid:cid, cmd:0, n:n, t:t, data:msg}
         this._socket.write(res)
@@ -668,9 +659,8 @@ server.sendString  = function(route, cid, t, n, msg){
 }
 
 server.sendHeartBeat = function(t) {
-	// this.sendString("02BEAT" + (t || ""));
-	console.log("send heartbeat");
-	this.sendString("room.heartbeat",0,0,0,t);
+	console.log("send heartbeat", t);
+	// this.sendString("room.heartbeat",0,0,0,t);
 
 };
 

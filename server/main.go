@@ -5,10 +5,10 @@ import (
 	"github.com/jmesyan/nano"
 	"github.com/jmesyan/nano/component"
 	// pb "github.com/jmesyan/nano/protos"
-	"github.com/golang/protobuf/proto"
+	// "github.com/golang/protobuf/proto"
 	"github.com/jmesyan/nano/serialize/protobuf"
 	"github.com/jmesyan/nano/session"
-	"icetea/server/protos"
+	// "icetea/server/protos"
 	"log"
 	"strings"
 	"time"
@@ -93,7 +93,7 @@ func (mgr *RoomManager) Join(a *nano.Agency, msg []byte) error {
 	// a.SendMsg("good", []byte("welcome"))
 	// a.SendMsg(protos.OGID_CONTROL_REGIS, &protos.RegisterServer{Gid: proto.Int32(1001), Rtype: proto.Int32(1), Ridx: proto.Int32(1)})
 
-	a.SendMsg(protos.OGID_CONTROL_HEART_BEAT, &protos.ControlHeartBeat{Nowstamp: proto.Int64(time.Now().Unix())})
+	// a.SendMsg(protos.OGID_CONTROL_HEART_BEAT, &protos.ControlHeartBeat{Nowstamp: proto.Int64(time.Now().Unix())})
 
 	// // NOTE: join test room only in demo
 	// room, found := mgr.rooms[testRoomID]
@@ -126,16 +126,7 @@ func (mgr *RoomManager) Message(a *nano.Agency, msg *[]byte) error {
 	return nil
 }
 
-func (mgr *RoomManager) Heartbeat(a *nano.Agency, msg []byte) error {
-	time.AfterFunc(10*time.Second, func() {
-		fmt.Println("Heartbeat", string(msg))
-		a.SendMsg(protos.OGID_CONTROL_HEART_BEAT, &protos.ControlHeartBeat{Nowstamp: proto.Int64(time.Now().Unix())})
-	})
-	return nil
-}
-
 func main() {
-	nano.SetGameType("1001", "1", "2")
 	nano.SetSerializer(protobuf.NewSerializer())
 	// rewrite component and handler name
 	room := NewRoomManager()
@@ -143,13 +134,14 @@ func main() {
 		component.WithName("room"),
 		component.WithNameFunc(strings.ToLower),
 	)
-
+	gsid := []string{"1001", "1", "2"}
+	addr := ":7873"
 	pipeline := nano.NewPipeline()
 	// var stats = &stats{}
 	// pipeline.Outbound().PushBack(stats.outbound)
 	// pipeline.Inbound().PushBack(stats.inbound)
-
 	nano.EnableDebug()
 	log.SetFlags(log.LstdFlags | log.Llongfile)
-	nano.Connect(":7873", nano.WithPipeline(pipeline))
+	client := nano.NewNanoClient(gsid, addr, nano.WithPipeline(pipeline))
+	client.Start()
 }

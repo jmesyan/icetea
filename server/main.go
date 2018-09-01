@@ -118,8 +118,8 @@ func (mgr *RoomManager) Join(s *session.Session, msg *protos.ControlMatchAndroid
 	// 	Uid:   proto.Int32(1324),
 	// 	Golds: proto.Int64(112121),
 	// })
-	return s.Push("welcome", protos.OGID_CONTROL_BYTE, []byte("hello ha"))
-	// return s.Response(protos.OGID_CONTROL_BYTE, []byte("hello ha"))
+	// return s.Push("welcome", protos.OGID_CONTROL_BYTE, []byte("hello ha"))
+	return s.Response(protos.OGID_CONTROL_BYTE, []byte("hello ha"))
 	// return nil
 }
 

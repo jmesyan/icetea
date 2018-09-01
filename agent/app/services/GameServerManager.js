@@ -118,7 +118,8 @@ function rpcService(call){
     });
     
     setTimeout(function(){
-        gserver.notify(0,"room.join", "control_match_android_sign", {uid:1234, mid:23223, mlid:212121});
+        // gserver.notify(0,"room.join", "control_match_android_sign", {uid:1234, mid:23223, mlid:212121});
+        gserver.request(0, pomelo.app.get("gameserverManager").getTick(dealRoom),"room.join", "control_match_android_sign", {uid:1234, mid:23223, mlid:212121});
     }, 300);
 }
 

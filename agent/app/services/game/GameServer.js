@@ -361,10 +361,9 @@ server.toString = function() {
 	return JSON.stringify(json);
 };
 
-server.sendMsg = function(cid, mid, route, body){
+server.sendMsg = function(cid, type, mid, route, body){
 	if (!!this._socket) {
-		mtypes  = GameConst.Message;
-		var res = {cid:cid, type:mtypes.TYPE_REQUEST, mid:mid, route:route, data:body}
+		var res = {cid:cid, type:type, mid:mid, route:route, data:body}
         this._socket.write(res)
 		return true;
 	}
@@ -381,7 +380,7 @@ server.request = function(cid, mid, route, cmd, data){
 	if (!body) {
 		log.error("the msg can't set:",JSON.stringify(data));
 	}
-	return this.sendMsg(cid, mid, route, body);
+	return this.sendMsg(cid, GameConst.Message.TYPE_REQUEST,mid, route, body);
 }
 
 server.notify = function(cid, route, cmd, data){
@@ -394,7 +393,7 @@ server.notify = function(cid, route, cmd, data){
 	if (!body) {
 		log.error("the msg can't set:",JSON.stringify(data));
 	}
-	return this.sendMsg(cid, 0, route, body);
+	return this.sendMsg(cid, GameConst.Message.TYPE_NOTIFY, 0, route, body);x
 }
 
 

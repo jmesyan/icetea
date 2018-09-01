@@ -22,9 +22,10 @@ server.afterStart = function(cb) {
     // log.warn('GameServers will start Listen afterStart 1000s');
     console.log("GameServerComponent init");
     setTimeout(function() {
-        if(pomelo.app.getServerType()=="game"){
-            hot.getGameServerManager().start();
-        }
+        var c = pomelo.app.get("gameServerConfig");
+        if (c && c.host) hot.getGameServerManager().start();
+        var c = pomelo.app.get("apiServerConfig");
+        if (c && c.host) hot.getPhpApiServer().start();
     }, 2000);
 
     process.nextTick(cb);

@@ -2,7 +2,9 @@
     "type": "connector",
     "token": "agarxhqb98rpajloaxn34ga8xrunpagkjwlaw3ruxnpaagl29w4rxn"
 }, {
-    "type": "game",
+    "type": "hall",
     "token": "agarxhqb98rpajloaxn34ga8xrunpagkjwlaw3ruxnpaagl29w4789"
-}
-]
+}, {
+    "type": "db",
+    "token": "agarxhqb98rpajloaxn34ga8xrunpagkjwlaw3ruxnpaagl29w4678"
+}]

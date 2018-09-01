@@ -21,7 +21,7 @@ app.configure('production|development', 'connector', function(){
     });
 });
 
-app.configure('production|development', 'connector|master|game|db', function() {
+app.configure('production|development', 'connector|master|hall|db', function() {
   //memcache配置
   app.loadConfig('memcached', app.getBase() + '/config/memcached.json');
   //cache
@@ -40,7 +40,7 @@ app.configure('production|development', 'connector|master|game|db', function() {
 });
 
 // app configure
-app.configure('production|development', 'game', function() {
+app.configure('production|development', 'hall', function() {
     //app.set('connectorConfig', { useProtobuf: true });
   //扫描热更新
   hot.scan(app.getBase() + "/app/common");

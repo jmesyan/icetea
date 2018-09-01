@@ -1,3 +1,9 @@
+exports.Message ={
+	TYPE_REQUEST:0,
+	TYPE_NOTIFY:1,
+	TYPE_RESPONSE:2,
+	TYPE_PUSH:3
+}
 exports.ChanelName = {
 	hall: "hall" //大厅
 };

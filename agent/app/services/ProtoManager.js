@@ -37,6 +37,20 @@ pm.getBody = function(cmd, data) {
 	return result;
 };
 
+pm.encodeBody = function(cmd, data){
+	if (!protoMsg[cmd]) {
+		log.error('protobuf not found:', cmd);
+		return null;
+	}
+	var result = null;
+	try {
+		result = protoMsg[cmd].encode(data);
+	} catch (e) {
+		log.error('protobuf encode error:', cmd, data);
+	}
+	return result;
+}
+
 pm.init = function() {
 	this.reloadData();
 };

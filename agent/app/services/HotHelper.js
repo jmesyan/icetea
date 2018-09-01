@@ -40,6 +40,10 @@ exports.getGamePlayer = function() {
 exports.getGameServer = function() {
 	return hot.get("GameServer", require(__dirname + "/game/GameServer"));
 };
+//GameServer
+exports.getGameHandlers = function() {
+	return hot.get("GameHandlers", require(__dirname + "/game/GameHandlers"));
+};
 //GameChannelManager
 exports.getGameChannelManager = function() {
 	return hot.get("GameChannelManager", require(__dirname + "/game/PlayerToGameChannel"), "PlayerToGameChannel");

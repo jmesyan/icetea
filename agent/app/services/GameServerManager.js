@@ -9,11 +9,13 @@ const pkgDefine = protoLoader.loadSync(PROTO_PATH);
 const protos = grpcLib.loadPackageDefinition(pkgDefine).protos;
 var hot = require("./HotHelper");
 var serversort = require("./StoreDatas").serversort;
-var GameServer = hot.getGameServer();
 
 var fs = require('fs');
 var protobuf = require('protocol-buffers');
 var messages = protobuf(fs.readFileSync(__dirname+'/protos/chat.proto'));
+
+var GameConst = require("./HotHelper").getGameConst();
+var CMD = GameConst.CMD;
 
 var GameServerManager = function() {
     this.$id = "GameServerManager";
@@ -102,6 +104,7 @@ function rpcService(call){
     var gserver = serversort[gsid];
     if (!gserver) {
         console.log("init gsid server:", gsid);
+        var GameServer = hot.getGameServer();
         gserver  = new GameServer(call);
         gserver.init(ridx, rtype, gid);
     }
@@ -115,11 +118,15 @@ function rpcService(call){
     });
     
     setTimeout(function(){
-        var data = messages.UserMessage.encode({Name:"jmesyan", Content:"good"});
-        var res = {cid:0, route:"room.join", cmd:0, n:0, t:0, data:data}
-        call.write(res)
+        gserver.notify(0,"room.join", "control_match_android_sign", {uid:1234, mid:23223, mlid:212121});
     }, 300);
 }
+
+function dealRoom(body){
+    console.log("the dealRoom come:", JSON.stringify(body));
+}
+
+
 
 module.exports = {
     name: "hall",

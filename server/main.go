@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	// "github.com/golang/protobuf/proto"
 	"github.com/jmesyan/nano"
 	"github.com/jmesyan/nano/component"
-	// pb "github.com/jmesyan/nano/protos"
-	// "github.com/golang/protobuf/proto"
+	pb "github.com/jmesyan/nano/protos"
 	"github.com/jmesyan/nano/serialize/protobuf"
 	"github.com/jmesyan/nano/session"
-	// "icetea/server/protos"
+	"icetea/server/protos"
 	"log"
 	"strings"
 	"time"
@@ -35,12 +35,12 @@ type (
 	}
 )
 
-func (stats *stats) outbound(s *session.Session, msg nano.Message) error {
+func (stats *stats) outbound(s *session.Session, msg pb.GrpcMessage) error {
 	stats.outboundBytes += len(msg.Data)
 	return nil
 }
 
-func (stats *stats) inbound(s *session.Session, msg nano.Message) error {
+func (stats *stats) inbound(s *session.Session, msg pb.GrpcMessage) error {
 	stats.inboundBytes += len(msg.Data)
 	return nil
 }
@@ -81,9 +81,9 @@ func (mgr *RoomManager) AfterInit() {
 }
 
 // Join room
-func (mgr *RoomManager) Join(a *nano.Agency, msg []byte) error {
+func (mgr *RoomManager) Join(s *session.Session, msg *protos.ControlMatchAndroidSign) error {
 
-	log.Println("join room", a, msg)
+	log.Println("join room", s, msg)
 	// send, err := serializer.Marshal(msg)
 	// if err != nil {
 	// 	fmt.Print(err)
@@ -112,12 +112,19 @@ func (mgr *RoomManager) Join(a *nano.Agency, msg []byte) error {
 	// room.group.Broadcast("onNewUser", &NewUser{Content: fmt.Sprintf("New user: %d", s.ID())})
 	// // new user join group
 	// room.group.Add(s) // add session to group
-	// return s.Response(&JoinResponse{Result: "success"})
-	return nil
+	// return s.Response(protos.OGID_CONTROL_HEART_BEAT, &protos.ControlHeartBeat{Nowstamp: proto.Int64(time.Now().Unix())})
+	// return s.Push("welcome", protos.OGID_CONTROL_ADD_GOLDS, &protos.ControlAddGolds{
+	// 	Rel:   proto.Int32(2),
+	// 	Uid:   proto.Int32(1324),
+	// 	Golds: proto.Int64(112121),
+	// })
+	return s.Push("welcome", protos.OGID_CONTROL_BYTE, []byte("hello ha"))
+	// return s.Response(protos.OGID_CONTROL_BYTE, []byte("hello ha"))
+	// return nil
 }
 
 // Message sync last message to all members
-func (mgr *RoomManager) Message(a *nano.Agency, msg *[]byte) error {
+func (mgr *RoomManager) Message(s *session.Session, msg []byte) error {
 	// if !s.HasKey(roomIDKey) {
 	// 	return fmt.Errorf("not join room yet")
 	// }
@@ -137,9 +144,9 @@ func main() {
 	gsid := []string{"1001", "1", "2"}
 	addr := ":7873"
 	pipeline := nano.NewPipeline()
-	// var stats = &stats{}
-	// pipeline.Outbound().PushBack(stats.outbound)
-	// pipeline.Inbound().PushBack(stats.inbound)
+	var stats = &stats{}
+	pipeline.Outbound().PushBack(stats.outbound)
+	pipeline.Inbound().PushBack(stats.inbound)
 	nano.EnableDebug()
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 	client := nano.NewNanoClient(gsid, addr, nano.WithPipeline(pipeline))

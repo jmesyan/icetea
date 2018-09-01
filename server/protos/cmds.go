@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	OGID_CONTROL_BYTE          = 0
 	OGID_CONTROL_REGIS         = iota + 0x2500 //9472 注册
 	OGID_CONTROL_USER                          //9473 查看玩家游戏信息
 	OGID_CONTROL_GAME_STATE                    //9474 游戏状态信息

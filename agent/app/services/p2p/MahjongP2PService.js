@@ -184,14 +184,14 @@ service.create = function(me, session, body, next, gameid, uid,createGameRoom,lo
 			var num = parseInt(body.rounds/8) || 0;
 		}
 		if (!server) {
-			log.error('hebeimj', s.gsid, '服务器不存在!');
+			log.error('icetea', s.gsid, '服务器不存在!');
 			//pomelo.app.get('randomAssignGameTable').addToNotUse(gsidtid, s.code); //回收到未使用
 			pomelo.app.get('lock').end(lockKey);
 			return me.error(session, next, 'sysMaintenance', 'rel');
 		}
 		if (!!server && !!player && num) {
 			if (player.room_card && player.room_card < num && clubid == 0) {
-				log.error('hebeimj', player.uid, player.room_card, '用户卡数量不足!');
+				log.error('icetea', player.uid, player.room_card, '用户卡数量不足!');
 				pomelo.app.get('randomAssignGameTable').addToNotUse(gsidtid, s.code); //回收到未使用
 				pomelo.app.get('lock').end(lockKey);
 				return me.error(session, next, 'cardNotEnough', 'rel');
@@ -298,7 +298,7 @@ service.roomcreate = function(me,session,next,gsidtid,player,num,body,s,lockKey,
 		} else {
 			pomelo.app.get('randomAssignGameTable').addToNotUse(gsidtid, s.code); //回收到未使用
 			pomelo.app.get('lock').end(lockKey);
-			log.error('hebeimj', player.uid, player.room_card, '用户卡数量不足2!');
+			log.error('icetea', player.uid, player.room_card, '用户卡数量不足2!');
 			me.error(session, next, 'cardNotEnough', 'rel');
 		}
 	});
@@ -660,7 +660,7 @@ service.removeTable = function(gsid, table) { pomelo.app.get('randomAssignGameTa
 service.removeTableUser = function(gsidtid, uid) { pomelo.app.get('randomAssignGameTable').removeTableUser(gsidtid, uid); };
 //清理房间
 service.removeRooms = function(gsid) {
-	log.info('hebeimj removeRooms', gsid);
+	log.info('icetea removeRooms', gsid);
 	pomelo.app.rpc.db.dbRemote.removeRooms(null, gsid);
 };
 //检测是否重连

@@ -31,7 +31,7 @@ service.clearTempTable = function() {
     for (var i in list) delete p2p.mj.temptable[list[i]];
 
     if (list.length == 0){
-        log.info('hebeimj 桌子使用:', p2p.mj.use.length,  '房号剩余:', p2p.mj.allcode.length, '临时坏桌子:', dieCount);
+        log.info('icetea 桌子使用:', p2p.mj.use.length,  '房号剩余:', p2p.mj.allcode.length, '临时坏桌子:', dieCount);
         for(var gid in p2p.mj.nouse){
             log.info(gid, '桌子剩余:', p2p.mj.nouse[gid].length);
         }

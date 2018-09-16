@@ -127,7 +127,7 @@ service.registerTables = function(gsid, tables) {
             }
         });
         log.info(
-            'hebeimj registerTables',
+            'icetea registerTables',
             gsid, '注册:', tables.length, '使用:', use,
             '总使用桌子:', p2p.mj.use.length, '总可用桌子:', p2p.mj.nouse[gid].length,
             '总可用房号:', p2p.mj.allcode.length
@@ -137,7 +137,7 @@ service.registerTables = function(gsid, tables) {
 //注销桌子
 service.removeTable = function(gsid, table) {
     var gsidtid = gsid + '_' + table;
-    log.info('hebeimj removeTable', gsid, table, gsidtid);
+    log.info('icetea removeTable', gsid, table, gsidtid);
     var gid = gsid.split("_")[0];
     while(p2p.mj.nouse[gid].indexOf(gsidtid) != -1) { var index = p2p.mj.nouse[gid].indexOf(gsidtid); if (index != -1) p2p.mj.nouse[gid].splice(index, 1); }
     while(p2p.mj.use.indexOf(gsidtid) != -1) { var index = p2p.mj.use.indexOf(gsidtid); if (index != -1) p2p.mj.use.splice(index, 1); }
@@ -156,7 +156,7 @@ service.removeTable = function(gsid, table) {
 //随机桌子
 service.randTable = function(gameid) {
     var len = p2p.mj.nouse[gameid] ? p2p.mj.nouse[gameid].length : 0;
-    if (len == 0) { log.error('麻将游戏服务器桌子不足!', 'hebeimj 桌子使用:', p2p.mj.use.length, '桌子剩余:', len, '房号剩余:', p2p.mj.allcode.length); return null; }
+    if (len == 0) { log.error('麻将游戏服务器桌子不足!', 'icetea 桌子使用:', p2p.mj.use.length, '桌子剩余:', len, '房号剩余:', p2p.mj.allcode.length); return null; }
 
     if(len > 10) len = len - 5;
 
